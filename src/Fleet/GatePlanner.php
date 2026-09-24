@@ -115,6 +115,7 @@ final readonly class GatePlanner
         $steps[] = new GateStep(GateStepKind::Serve, 'the project is served');
         $steps[] = new GateStep(GateStepKind::SignIn, 'the administrator signs in');
         $steps[] = new GateStep(GateStepKind::CreateArea, \sprintf('the area "%s" is created', $settings->areaName), subject: $settings->areaName);
+        $steps[] = new GateStep(GateStepKind::OpenPersonRecord, 'the administrator\'s record answers');
 
         foreach ($request->modules as $module) {
             $steps = [...$steps, ...$this->addTheModule($settings, $request, $module)];
@@ -255,6 +256,7 @@ final readonly class GatePlanner
         $steps[] = new GateStep(GateStepKind::Serve, $package.': the project is served again');
         $steps[] = new GateStep(GateStepKind::SignIn, $package.': the administrator signs in');
         $steps[] = new GateStep(GateStepKind::OpenModule, \sprintf('%s: switched on, and %s answers', $package, str_replace('%s', '{uuid}', $module->page)), subject: $module->name);
+        $steps[] = new GateStep(GateStepKind::OpenPersonRecord, $package.': the administrator\'s record answers, with every contributed card', subject: $module->name);
 
         return $steps;
     }

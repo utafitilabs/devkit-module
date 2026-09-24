@@ -85,6 +85,7 @@ final class GateRunner
             GateStepKind::SignIn => $this->signIn($step, $request),
             GateStepKind::CreateArea => $this->createTheArea($step, $request),
             GateStepKind::OpenModule => $this->switchOnAndOpen($step, $request),
+            GateStepKind::OpenPersonRecord => $this->openPersonRecord($step, $request),
             GateStepKind::ReadmeListsModules => $this->readmeListsModules($step, $request),
             GateStepKind::ValidateStarter => $this->validateStarter($step, $request),
         };
@@ -407,6 +408,42 @@ final class GateRunner
         }
 
         return $page.' answers';
+    }
+
+    /**
+     * THE ADMINISTRATOR'S RECORD, reached the way a person reaches it: the
+     * people register, then the row that names them. The record page collects
+     * every provider tagged team.record.cells and draws each card it is handed
+     * (core: TeamBundle\Controller\MemberController::recordCellsFor, through
+     * Contracts\People\PersonRecordCellProviderInterface), so it is the page
+     * that proves a module's card meets the contract — a wrong method name
+     * there is a 500 on every record, invisible from the module's own pages.
+     */
+    private function openPersonRecord(GateStep $step, GateRequest $request): string
+    {
+        $browser = $this->signedIn($step);
+
+        $crawler = $browser->request('GET', $this->baseUrl.$this->routePath($step, $request, 'team_index'));
+        $this->expectStatus($step, $browser, 'the people register answers');
+
+        $links = $crawler->filter('a[href]')->reduce(static function (Crawler $node): bool {
+            return 1 === preg_match('#/team/[0-9a-f-]{36}$#', (string) $node->attr('href'))
+                && str_contains($node->text(''), GatePlanner::ADMIN_FIRST_NAME);
+        });
+        if (0 === $links->count()) {
+            throw new GateFailure($step, (string) $browser->getResponse()->getContent(), 'the people register has no link to the administrator\'s record');
+        }
+
+        $path = (string) $links->first()->attr('href');
+        $browser->request('GET', $this->baseUrl.$path);
+        $this->expectStatus($step, $browser, $path.' answers for the administrator');
+
+        $body = (string) $browser->getResponse()->getContent();
+        if (!str_contains($body, GatePlanner::ADMIN_FIRST_NAME)) {
+            throw new GateFailure($step, $body, 'the record does not name the person');
+        }
+
+        return $path.' answers';
     }
 
     /**

@@ -52,6 +52,14 @@ enum GateStepKind
 
     /** Switch the module on for the area through the grid's own form, then open its first page. */
     case OpenModule;
+    /**
+     * Open the administrator's own record from the people register. A person's
+     * record is assembled from every module's contributed cards through the
+     * team.record.cells seam, so it is the one page that fails when a module
+     * meets the seam's contract wrongly — and a module's own pages never show it
+     * (telemetry 0.1.2 took every person record down while its own pages answered).
+     */
+    case OpenPersonRecord;
 
     /** The starter's own list of official modules and the configured one are the same list. */
     case ReadmeListsModules;

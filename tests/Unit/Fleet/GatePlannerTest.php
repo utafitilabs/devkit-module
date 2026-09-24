@@ -166,9 +166,9 @@ final class GatePlannerTest extends TestCase
         $settings = $this->settings();
         $plan = $this->planner()->plan($settings, $this->request(GateMode::Released, $settings->resolve(['patrol'])));
 
-        $kinds = array_map(static fn (GateStep $s): GateStepKind => $s->kind, \array_slice($plan->steps, -4));
-        self::assertSame([GateStepKind::Shell, GateStepKind::Serve, GateStepKind::SignIn, GateStepKind::OpenModule], $kinds);
-        self::assertSame(['composer', 'test'], $plan->steps[$plan->count() - 4]->command);
+        $kinds = array_map(static fn (GateStep $s): GateStepKind => $s->kind, \array_slice($plan->steps, -5));
+        self::assertSame([GateStepKind::Shell, GateStepKind::Serve, GateStepKind::SignIn, GateStepKind::OpenModule, GateStepKind::OpenPersonRecord], $kinds, 'every module install ends on the administrator\'s record, where contributed cards are drawn');
+        self::assertSame(['composer', 'test'], $plan->steps[$plan->count() - 5]->command);
         self::assertSame('patrol', $plan->steps[$plan->count() - 1]->subject);
     }
 
