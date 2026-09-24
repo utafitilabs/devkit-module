@@ -177,8 +177,8 @@ application's:
 
 ```json
 "repositories": [
-    { "type": "vcs", "url": "https://github.com/uhifadhilabs/uhifadhi" },
-    { "type": "vcs", "url": "https://github.com/uhifadhilabs/devkit-module" }
+    { "type": "vcs", "url": "https://github.com/utafitilabs/uhifadhi" },
+    { "type": "vcs", "url": "https://github.com/utafitilabs/devkit-module" }
 ]
 ```
 
