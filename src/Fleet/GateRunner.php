@@ -89,10 +89,77 @@ final class GateRunner
         };
     }
 
+    /**
+     * THE CHILD'S ENVIRONMENT, SCRUBBED OF THE PARENT'S.
+     *
+     * The gate is a console command of one installation that runs the console
+     * commands, composer and phpunit of another. A Process hands the child the
+     * parent's variables unless told otherwise:
+     *
+     *   @see vendor/symfony/process/Process.php — start():
+     *        `$env += $this->getDefaultEnv();`, and getDefaultEnv() is
+     *        `$_ENV + getenv()`
+     *
+     * The parent booted through Dotenv, so its `$_ENV` carries that installation's
+     * own `.env` values *and* `SYMFONY_DOTENV_VARS`, the marker naming every
+     * variable Dotenv set. The marker is not inert in the child: a variable it
+     * names is overwritten from the child project's `.env` even when the child
+     * process already has a value for it —
+     *   @see vendor/symfony/dotenv/Dotenv.php — populate():
+     *        `if (!isset($loadedVars[$name]) && !$overrideExistingVars && isset($_ENV[$name])) { continue; }`
+     *
+     * which is how the created project's `composer test` went red: phpunit forces
+     * `APP_ENV=test`, the inherited marker let the project's `.env` put `dev` back,
+     * `.env.test` was therefore never loaded and `KERNEL_CLASS` was missing.
+     *   @see https://symfony.com/doc/current/configuration.html#overriding-environment-values-via-env-local
+     *        — real environment variables win over `.env` files, which is true only
+     *        of variables Dotenv has not claimed in the marker.
+     *
+     * So every variable the marker names is removed for the child, the marker with
+     * them, and the child project's own `.env` decides its environment. A value of
+     * `false` is how Process removes one:
+     *
+     *   "Setting environment variables ... set the value to false to remove it"
+     *   @see https://symfony.com/doc/current/components/process.html#setting-environment-variables-for-processes
+     *   @see vendor/symfony/process/Process.php — start():
+     *        `if (false !== $v && ...) { $envPairs[] = $k.'='.$v; }`
+     *
+     * Removed with them are the variables no `.env` writes but a launching context
+     * does, so that the child cannot depend on how the gate itself was started:
+     * `APP_DEBUG`, which Dotenv computes outside the marker
+     * (@see vendor/symfony/dotenv/Dotenv.php — bootEnv(): `$_SERVER[$k] = $_ENV[$k] = ...`),
+     * `KERNEL_CLASS`, which exists when the gate is driven from a test kernel, and
+     * `SHELL_VERBOSITY`, which the console writes from its own `-q`/`-v`
+     * (@see vendor/symfony/console/Application.php — configureIO(): `$_ENV['SHELL_VERBOSITY'] = $shellVerbosity;`).
+     *
+     * What the child is *given* is only the gate's own: composer's memory and the
+     * databases this run owns, the same ones written into the project's `.env.local`.
+     *
+     * @return array<string, string|false>
+     */
+    public function childEnvironment(GateRequest $request): array
+    {
+        $scrubbed = [
+            'SYMFONY_DOTENV_VARS' => false,
+            'APP_DEBUG' => false,
+            'KERNEL_CLASS' => false,
+            'SHELL_VERBOSITY' => false,
+        ];
+
+        $marker = $_SERVER['SYMFONY_DOTENV_VARS'] ?? $_ENV['SYMFONY_DOTENV_VARS'] ?? '';
+        foreach (explode(',', \is_string($marker) ? $marker : '') as $name) {
+            if ('' !== $name) {
+                $scrubbed[$name] = false;
+            }
+        }
+
+        return [...$scrubbed, ...$request->databases, 'COMPOSER_MEMORY_LIMIT' => '-1'];
+    }
+
     private function shell(GateStep $step, GateRequest $request): string
     {
         $cwd = $step->inProject ? $request->project : \dirname($request->project);
-        $process = new Process($step->command, $cwd, ['COMPOSER_MEMORY_LIMIT' => '-1', 'APP_ENV' => 'dev'], timeout: 900);
+        $process = new Process($step->command, $cwd, $this->childEnvironment($request), timeout: 900);
         $process->run();
         $output = $process->getOutput().$process->getErrorOutput();
 
@@ -152,7 +219,9 @@ final class GateRunner
         $this->server?->stop();
 
         $this->baseUrl = 'http://127.0.0.1:'.$this->freePort($step);
-        $server = new Process(['php', '-S', substr($this->baseUrl, 7), '-t', 'public'], $request->project);
+        // Served with the same scrubbed environment as every other child, so the
+        // pages the gate reads are the created project's own environment too.
+        $server = new Process(['php', '-S', substr($this->baseUrl, 7), '-t', 'public'], $request->project, $this->childEnvironment($request));
 
         // NOBODY READS THIS SERVER'S OUTPUT, SO IT MUST NOT HAVE ANY. Process
         // always fetches a child's stdout and stderr into pipes, and it drains

@@ -13,6 +13,7 @@ the last check before a release is done, and the first after one.
 - [Options](#options)
 - [What the fleet is, as configuration](#what-the-fleet-is-as-configuration)
 - [What it does, step by step](#what-it-does-step-by-step)
+- [Why the gate scrubs its environment](#why-the-gate-scrubs-its-environment)
 - [Reading a red run](#reading-a-red-run)
 - [Adding an official module](#adding-an-official-module)
 - [Why it lives here](#why-it-lives-here)
@@ -169,6 +170,32 @@ nothing, and the cache commands read no database.
    switched on for the area through the grid's own form, and the module's first
    page answering for the administrator. Storage and telemetry, which have no
    tile, answer at the files hub and the console.
+
+## Why the gate scrubs its environment
+
+The gate is a console command of one installation that runs another project's
+composer, console and `composer test`. A child process is handed the parent's
+variables unless it is told otherwise, and the parent booted through Dotenv, so
+its variables are that installation's `.env` values plus `SYMFONY_DOTENV_VARS` —
+the marker naming every variable Dotenv set.
+
+That marker is not inert in the child. Dotenv overwrites a variable the marker
+names *even when the process already has a value for it*; only a variable outside
+the marker is left alone, which is the whole of "real environment variables win
+over `.env` files". Inherited, it made the created project's own `composer test`
+go red: phpunit forces `APP_ENV=test`, the project's `.env` then put `dev` back
+over it, `.env.test` was never loaded, and the suite stopped at a missing
+`KERNEL_CLASS`.
+
+So every child of the gate — every shell step and the built-in server — is given
+an environment scrubbed of the parent's: the marker and every variable it names
+are *removed*, and with them `APP_DEBUG`, `KERNEL_CLASS` and `SHELL_VERBOSITY`,
+which no `.env` writes but a launching context does. The created project's own
+`.env` then decides its environment, and the gate answers the same whether it was
+launched from an installation, a test kernel or a quiet console.
+
+What the child is given is only the gate's own: composer's memory limit and the
+databases this run owns, the same ones written into the project's `.env.local`.
 
 ## Reading a red run
 
