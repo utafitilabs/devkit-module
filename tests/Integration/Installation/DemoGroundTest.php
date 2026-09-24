@@ -29,7 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 
 /**
- * THE GROUND UNDER THE DEMO ORGANISATION — areas, the zones that subdivide them,
+ * THE GROUND UNDER THE DEMO ORGANIZATION — areas, the zones that subdivide them,
  * the stations standing in those zones, and the people posted to them.
  *
  * FOUR PROVIDERS, ONE ORDER, ASKED THROUGH THE COMMAND. Each of them is a slice

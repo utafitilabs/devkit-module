@@ -21,7 +21,7 @@ jobs:
         php: ['8.4', '8.5']
 
     # The installation suite boots the whole core against a real database,
-    # because "creates an administrator" and "seeds the demo organisation" are
+    # because "creates an administrator" and "seeds the demo organization" are
     # claims about rows. The collector's own suites need none of it.
     services:
       postgres:
