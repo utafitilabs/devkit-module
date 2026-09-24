@@ -426,12 +426,14 @@ final class GateRunner
         $crawler = $browser->request('GET', $this->baseUrl.$this->routePath($step, $request, 'team_index'));
         $this->expectStatus($step, $browser, 'the people register answers');
 
-        $links = $crawler->filter('a[href]')->reduce(static function (Crawler $node): bool {
-            return 1 === preg_match('#/team/[0-9a-f-]{36}$#', (string) $node->attr('href'))
-                && str_contains($node->text(''), GatePlanner::ADMIN_FIRST_NAME);
-        });
+        // The register is a table: one row per person, the name in the row and
+        // the record behind the row's Open button (core: templates/team/_bits.html.twig,
+        // `a.open-btn` to team_member). So: the row that names the administrator,
+        // then that row's link to a record.
+        $rows = $crawler->filter('tr')->reduce(static fn (Crawler $row): bool => str_contains($row->text(''), GatePlanner::ADMIN_FIRST_NAME));
+        $links = $rows->filter('a[href]')->reduce(static fn (Crawler $node): bool => 1 === preg_match('#/team/[0-9a-f-]{36}$#', (string) $node->attr('href')));
         if (0 === $links->count()) {
-            throw new GateFailure($step, (string) $browser->getResponse()->getContent(), 'the people register has no link to the administrator\'s record');
+            throw new GateFailure($step, (string) $browser->getResponse()->getContent(), 'the people register has no row naming the administrator with a link to their record');
         }
 
         $path = (string) $links->first()->attr('href');
