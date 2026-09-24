@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Devkit;
 
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -21,6 +22,7 @@ use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 use Uhifadhi\Devkit\Console\DependencyInjection\Compiler\CollectContributionPointsPass;
 use Uhifadhi\Devkit\DependencyInjection\Compiler\DecorateCommandLoaderPass;
+use Uhifadhi\Devkit\DependencyInjection\DevkitConfiguration;
 
 /**
  * Devkit — THE dev-only module, and a collector.
@@ -63,6 +65,11 @@ final class UhifadhiDevkitBundle extends AbstractBundle
 
     protected string $extensionAlias = 'devkit';
 
+    public function configure(DefinitionConfigurator $definition): void
+    {
+        DevkitConfiguration::define($definition->rootNode());
+    }
+
     /**
      * @param array<string, mixed> $config
      */
@@ -70,6 +77,13 @@ final class UhifadhiDevkitBundle extends AbstractBundle
     {
         // The collector's static wiring — always.
         $container->import('../config/services.php');
+
+        // The fleet gate — always, and it reads nothing from this kernel: the
+        // installation it judges does not exist when it starts. What the fleet
+        // is made of is configuration, so a new official module is a line under
+        // devkit.fleet and no release of this bundle.
+        $builder->setParameter('devkit.fleet', \is_array($config['fleet'] ?? null) ? $config['fleet'] : []);
+        $container->import('../config/fleet.php');
 
         // The dev-console UI — ONLY where twig-bundle is installed, i.e. a real
         // devkit install (devkit requires twig, routing and the shell). The

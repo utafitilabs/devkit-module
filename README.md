@@ -15,6 +15,7 @@ is the only place devkit exists.
 - [`fixtures:demo` — demo content in dependency order](#fixturesdemo--demo-content-in-dependency-order)
 - [Descriptor commands](#descriptor-commands)
 - [`area:zones:import` — a zoning scheme from a file](#areazonesimport--a-zoning-scheme-from-a-file)
+- [`fleet:gate` — the whole fleet, installed](#fleetgate--the-whole-fleet-installed)
 - [How a module contributes](#how-a-module-contributes)
 - [The dev console](#the-dev-console)
 - [Why the contracts live in the core, not here](#why-the-contracts-live-in-the-core-not-here)
@@ -94,6 +95,36 @@ prints the import's own sentence. There is no `--dry-run`: the core's service
 previews a file through its own plan, which is what the zones screen confirms
 against, and a second shape of that from the console would be a second answer to
 one question.
+
+## `fleet:gate` — the whole fleet, installed
+
+```console
+bin/console fleet:gate                 # the fleet as published
+bin/console fleet:gate --mode=head     # the fleet as the sibling checkouts have it
+bin/console fleet:gate --dry-run       # the plan, and none of it performed
+```
+
+The gate creates a project from the starter with the starter's own commands and
+installs the whole platform into it, one official module at a time: a fresh
+database, the migrations, the catalogue command, the first administrator, a
+sign-in over HTTP, an area, and then each module required, migrated, found in the
+catalogue, smoke-tested, switched on for the area and opened. The step that
+breaks is the step the report names, and nothing after it runs.
+
+It answers the one question no other suite can: *does the released fleet install
+and run as one product?* Every other suite in the fleet tests one package at its
+own `HEAD`, and every build can be green while the install is broken, because no
+build performs the install.
+
+What the fleet is made of is **configuration** — `devkit.fleet.official_modules`,
+`devkit.fleet.after_migrate` and a `devkit.fleet.modules` entry per module — so
+adding an official module is a line in an installation's `devkit.yaml` and no
+release of this bundle. The installation the command is run from is never the
+project it judges: that one is created from nothing on every run.
+
+The full option table, the configuration and the release rhythm are in
+[docs/fleet-gate.md](docs/fleet-gate.md); the workflow that is the only thing
+allowed to mint a tag is in [docs/release-workflow.md](docs/release-workflow.md).
 
 ## How a module contributes
 
