@@ -30,6 +30,21 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
  *    services should be defined explicitly."
  *   "If the bundle defines services, they must be prefixed with the bundle alias."
  *   — https://symfony.com/doc/current/bundles/best_practices.html
+ *
+ * The `console.command` tag below is applied BY HAND for the same reason, and it
+ * carries no `command:` attribute on purpose. The docs present the tag as the
+ * fallback "If you can't use PHP attributes", and add: "When registering commands
+ * manually with the `console.command` tag, set the command name in the `command`
+ * attribute of the tag to get the same [lazy] behavior"
+ * (https://symfony.com/doc/current/console.html). The framework's own source
+ * settles what that leaves open for a class that DOES carry #[AsCommand]:
+ * vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php reads the
+ * attribute off the reflection class (`getCommandAttribute()`), resolves the name
+ * as `$tags[0]['command'] ?? $defaultName`, takes the description from the
+ * attribute too, and builds the `LazyCommand` wrapper from both — so a
+ * hand-tagged service whose class has the attribute is named, described and lazy
+ * without either string being retyped in the tag. The pass is registered at
+ * TYPE_BEFORE_REMOVING by vendor/symfony/console/ConsoleBundle.php.
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
