@@ -82,8 +82,8 @@ final class GateRunner
             GateStepKind::FreshDatabase => $this->freshDatabase($step),
             GateStepKind::WriteEnvironment => $this->writeEnvironment($request),
             GateStepKind::Serve => $this->serve($step, $request),
-            GateStepKind::SignIn => $this->signIn($step),
-            GateStepKind::CreateArea => $this->createTheArea($step),
+            GateStepKind::SignIn => $this->signIn($step, $request),
+            GateStepKind::CreateArea => $this->createTheArea($step, $request),
             GateStepKind::OpenModule => $this->switchOnAndOpen($step, $request),
             GateStepKind::ReadmeListsModules => $this->readmeListsModules($step, $request),
             GateStepKind::ValidateStarter => $this->validateStarter($step, $request),
@@ -267,11 +267,11 @@ final class GateRunner
         return new HttpBrowser(HttpClient::create());
     }
 
-    private function signIn(GateStep $step): string
+    private function signIn(GateStep $step, GateRequest $request): string
     {
         $browser = $this->browser();
 
-        $crawler = $browser->request('GET', $this->baseUrl.'/login');
+        $crawler = $browser->request('GET', $this->baseUrl.$this->routePath($step, $request, 'team_login'));
         $this->expectStatus($step, $browser, 'the sign-in page answers');
 
         $form = $crawler->filter('form[action$="/login"]')->form([
@@ -300,11 +300,11 @@ final class GateRunner
      * /areas/new, boundary to be imported later. The uuid in the address the
      * form lands on is the area's, and every module step works inside it.
      */
-    private function createTheArea(GateStep $step): string
+    private function createTheArea(GateStep $step, GateRequest $request): string
     {
         $browser = $this->signedIn($step);
 
-        $crawler = $browser->request('GET', $this->baseUrl.'/areas/new');
+        $crawler = $browser->request('GET', $this->baseUrl.$this->routePath($step, $request, 'area_new'));
         $this->expectStatus($step, $browser, 'the new-area form answers');
 
         $form = $crawler->filter('form')
@@ -332,6 +332,39 @@ final class GateRunner
      * and its first page then answers. An infrastructure module has no tile and
      * answers everywhere at once.
      */
+    /**
+     * A page's path, asked of the created project's router BY ROUTE NAME. The
+     * fleet keeps route names stable when a page moves (the area's module grid
+     * moved from …/modules/customize to …/configure/modules on 2026-09-24 and
+     * broke a gate that had the path written in), so the name is the contract
+     * the gate holds the project to, and the path is the project's answer.
+     *
+     * `debug:router <name> --format=json` is the documented way to read one
+     * route's definition out of an application.
+     *
+     * @see https://symfony.com/doc/current/routing.html#debugging-routes
+     * @see vendor/symfony/framework-bundle/Command/RouterDebugCommand.php (the
+     *      `name` argument and the json descriptor)
+     *
+     * @param array<string, string> $parameters placeholders to fill, e.g. ['uuid' => …]
+     */
+    private function routePath(GateStep $step, GateRequest $request, string $name, array $parameters = []): string
+    {
+        $process = new Process(['php', 'bin/console', 'debug:router', $name, '--format=json', '--no-interaction'], $request->project, $this->childEnvironment($request), timeout: 60);
+        $process->run();
+        if (!$process->isSuccessful()) {
+            throw new GateFailure($step, trim($process->getErrorOutput().$process->getOutput()), \sprintf('the project has no route named "%s"', $name));
+        }
+        /** @var array{path?: string} $route */
+        $route = json_decode($process->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
+        $path = $route['path'] ?? throw new GateFailure($step, $process->getOutput(), \sprintf('the route "%s" states no path', $name));
+        foreach ($parameters as $placeholder => $value) {
+            $path = str_replace('{'.$placeholder.'}', $value, $path);
+        }
+
+        return $path;
+    }
+
     private function switchOnAndOpen(GateStep $step, GateRequest $request): string
     {
         $browser = $this->signedIn($step);
@@ -344,7 +377,7 @@ final class GateRunner
             // on or off — action …/configure/modules/<slug>/toggle, a hidden
             // `to` of on|off and the CSRF token. A module already running has
             // `to=off`; the gate only ever switches on.
-            $crawler = $browser->request('GET', $this->baseUrl.'/areas/'.$this->areaUuid.'/configure/modules');
+            $crawler = $browser->request('GET', $this->baseUrl.$this->routePath($step, $request, 'area_modules_configure', ['uuid' => $this->areaUuid]));
             $this->expectStatus($step, $browser, 'the area\'s Modules configure section answers');
 
             $row = $crawler->filter(\sprintf('tr[data-row-slug="%s"]', $slug));
