@@ -78,6 +78,18 @@ final readonly class GatePlanner
         $steps = [];
 
         if ($request->isHead()) {
+            // The starter's lock agrees with its manifest, or nothing is created
+            // from it: `composer create-project` warns about a stale lock and
+            // installs on, so without this the gate would prove a project the
+            // starter's own CI refuses.
+            // https://getcomposer.org/doc/03-cli.md#validate
+            $steps[] = new GateStep(
+                GateStepKind::ValidateStarter,
+                'the starter validates',
+                ['composer', 'validate', '--strict', '--no-check-publish'],
+                subject: $request->skeletonCheckout(),
+            );
+
             // Only head mode has the starter on disk to read. The list the gate
             // installs and the list the starter's table offers an installer are
             // the same list, and they drift silently: a module configured here

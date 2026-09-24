@@ -86,6 +86,7 @@ final class GateRunner
             GateStepKind::CreateArea => $this->createTheArea($step),
             GateStepKind::OpenModule => $this->switchOnAndOpen($step, $request),
             GateStepKind::ReadmeListsModules => $this->readmeListsModules($step, $request),
+            GateStepKind::ValidateStarter => $this->validateStarter($step, $request),
         };
     }
 
@@ -364,6 +365,29 @@ final class GateRunner
         }
 
         return $page.' answers';
+    }
+
+    /**
+     * The starter's own `composer validate --strict`, run in its checkout. The
+     * child gets the same scrubbed environment as every other process.
+     *
+     * @see https://getcomposer.org/doc/03-cli.md#validate — "--strict … Return a
+     *      non-zero exit code for warnings as well as errors"
+     */
+    private function validateStarter(GateStep $step, GateRequest $request): string
+    {
+        $checkout = (string) $step->subject;
+        if (!is_file($checkout.'/composer.json')) {
+            throw new GateFailure($step, $checkout, 'there is no starter to validate there');
+        }
+
+        $process = new Process($step->command, $checkout, $this->childEnvironment($request), timeout: 120);
+        $process->run();
+        if (!$process->isSuccessful()) {
+            throw new GateFailure($step, trim($process->getOutput()."\n".$process->getErrorOutput()), 'the starter\'s lock or manifest is not release-ready');
+        }
+
+        return trim($process->getOutput());
     }
 
     private function readmeListsModules(GateStep $step, GateRequest $request): string

@@ -27,6 +27,14 @@ enum GateStepKind
     /** Run an argv, in the project or beside it, and fail on a non-zero exit. */
     case Shell;
 
+    /**
+     * `composer validate --strict` in the starter checkout: its lock agrees with
+     * its manifest before anything is created from it. A stale lock only WARNS
+     * on create-project and installs on, so the gate would otherwise prove a
+     * project the starter's own CI refuses (the release of 2026-09-24).
+     */
+    case ValidateStarter;
+
     /** Drop and recreate the database the step's subject names. */
     case FreshDatabase;
 

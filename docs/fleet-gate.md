@@ -138,6 +138,12 @@ Those are the shipped defaults; an installation writes the block only to differ.
 
 ## What it does, step by step
 
+Head mode opens with **the starter validates**: `composer validate --strict --no-check-publish` in the
+starter checkout. A stale lock only warns on `create-project` and installs on, so without this step the gate
+would prove a project the starter's own CI refuses; the release of 2026-09-24 shipped a starter tag locked to
+the previous core that way.
+
+
 Each step passes or fails on its own line, and the first red one ends the run
 with the command and its whole output.
 
