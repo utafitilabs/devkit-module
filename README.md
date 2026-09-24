@@ -197,21 +197,12 @@ collect the providers. Neither side depends on the other. See the core's
 ## Installing it
 
 ```console
-composer require --dev "uhifadhi/devkit-module:^0.1@dev"
+composer require --dev uhifadhi/devkit-module
 ```
 
-Neither package is on Packagist and neither has a stable tag yet, so the
-installation names where both come from and asks for the dev constraint
-explicitly. Composer reads `repositories` from the root package only — an entry
-in a dependency's own `composer.json` is ignored — so both lines belong in the
-application's:
-
-```json
-"repositories": [
-    { "type": "vcs", "url": "https://github.com/utafitilabs/uhifadhi" },
-    { "type": "vcs", "url": "https://github.com/utafitilabs/devkit-module" }
-]
-```
+It is on Packagist, so that line is the whole of it: no repository entry and no
+constraint spelled out by hand. `--dev` is not a preference — it is the
+production firewall this package lives behind.
 
 The commands the installed modules describe appear on the console at once,
 including the core's own:

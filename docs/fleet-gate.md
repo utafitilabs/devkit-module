@@ -154,6 +154,11 @@ with the command and its whole output.
    migration is caught before anything is served.
 5. `team:user:create` for the first administrator; the command ships with the
    core.
+
+The `registry:sync` step is the one the catalogue assertion depends on: a fleet
+whose `after_migrate` omits it fails at "the catalogue lists <slug>" for the
+first module, because nothing else writes the catalogue — a request reconciles
+nothing, and the cache commands read no database.
 6. The project is served with PHP's built-in server and the administrator signs
    in over HTTP: the sign-in page answers, the form is submitted, the redirect is
    followed, and the page that lands names them. Then they create the area
