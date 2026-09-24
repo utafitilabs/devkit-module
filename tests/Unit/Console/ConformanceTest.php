@@ -79,8 +79,8 @@ final class ConformanceTest extends TestCase
 
     private function conformance(): Conformance
     {
-        $area = new FixtureModuleProvider('area', 'Area', true, 2);
-        $patrol = new FixtureModuleProvider('patrol', 'Patrol', false, 1);
+        $area = new FixtureModuleProvider('area', 'Area', true);
+        $patrol = new FixtureModuleProvider('patrol', 'Patrol');
 
         $areaPackage = ResolvedPackage::of('uhifadhi/area-module', '0.11.1');
         $patrolPackage = ResolvedPackage::of('uhifadhi/patrol-module', '0.2.2');

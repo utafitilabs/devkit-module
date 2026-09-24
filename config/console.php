@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Devkit\Console\Command\CommandInventory;
 use Uhifadhi\Devkit\Console\Controller\ConsoleController;
 use Uhifadhi\Devkit\Console\Doctor\Conformance;
@@ -61,6 +62,7 @@ return static function (ContainerConfigurator $container): void {
             tagged_iterator(RegistryBundle::MODULE_TAG),
             service('devkit.console.packages'),
             service('router'),
+            tagged_iterator(ConcernSourceInterface::TAG),
         ]);
 
     // Doctor surface — the compatibility matrix + findings.

@@ -7,7 +7,7 @@
 {% block shell_page_title %}Modules{% endblock %}
 {% block shell_page_subtitle %}
     The installed fleet, in one register &mdash; every module with its version,
-    whether it pins the current core, how many permissions and routes it declares,
+    whether it pins the current core, how many grants and routes it declares,
     and where it is switched on. This is the authoritative registry the
     compatibility matrix and doctor read from; the Doctor surface turns these same
     facts into pass / warn / fail.
@@ -18,7 +18,7 @@
         <div class="f"><span class="k">Installed</span><span class="v">{{ registry.installedCount }} <em>packages</em></span></div>
         <div class="f"><span class="k">Current core</span><span class="v">uhifadhi {{ registry.currentCore }}</span></div>
         <div class="f"><span class="k">On current core</span><span class="v">{{ registry.onCoreCount }} / {{ registry.pinsCoreCount }}</span></div>
-        <div class="f"><span class="k">Permissions</span><span class="v">{{ registry.totalPermissions }}</span></div>
+        <div class="f"><span class="k">Grants</span><span class="v">{{ registry.totalGrants }}</span></div>
         <div class="f"><span class="k">Routes</span><span class="v">{{ registry.totalRoutes }}</span></div>
         <div class="sp"></div>
         <div class="f"><span class="k">Conformance</span><span class="v"><a href="{{ path('devkit_console_doctor') }}" style="text-decoration:none"><span class="chip warn">{{ report.warnCount }} warn</span> <span class="chip fail">{{ report.failCount }} fail</span></a></span></div>

@@ -20,7 +20,7 @@ use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
  *
  * `coreConstraint` is the version constraint the package declares on
  * `uhifadhi/uhifadhi`, or null when it declares none (the core
- * itself, and any infrastructure that does not pin it). `permissions` and
+ * itself, and any infrastructure that does not pin it). `grants` and
  * `routes` are counted only where a module provider was found for the package —
  * infrastructure contributes neither through the module tag.
  */
@@ -30,7 +30,7 @@ final readonly class ModuleRow
         public ResolvedPackage $package,
         public ?string $coreConstraint,
         public CoreState $coreState,
-        public int $permissions,
+        public int $grants,
         public int $routes,
         public ModuleReach $reach,
     ) {

@@ -19,6 +19,7 @@ use Uhifadhi\Devkit\Console\Module\ModuleReach;
 use Uhifadhi\Devkit\Console\Module\ModuleRegistry;
 use Uhifadhi\Devkit\Console\Module\ModuleRow;
 use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
+use Uhifadhi\Devkit\Tests\Integration\Console\Fixtures\FixtureConcernSource;
 use Uhifadhi\Devkit\Tests\Integration\Console\Fixtures\FixtureModuleProvider;
 use Uhifadhi\Devkit\Tests\Unit\Console\Fixtures\FakePackageIntrospector;
 use Uhifadhi\Devkit\Tests\Unit\Console\Fixtures\FakeRouter;
@@ -48,26 +49,26 @@ final class ModuleRegistryTest extends TestCase
         self::assertSame(ModuleReach::TheCore, $this->row($view->rows, 'uhifadhi')->reach);
     }
 
-    public function testItCountsPermissionsAndStampedRoutesFromTheSeamAndRouter(): void
+    public function testItCountsGrantsAndStampedRoutesFromTheSeamsAndRouter(): void
     {
         $view = $this->registry()->view();
 
-        self::assertSame(2, $this->row($view->rows, 'area')->permissions);
+        self::assertSame(2, $this->row($view->rows, 'area')->grants);
         self::assertSame(9, $this->row($view->rows, 'area')->routes);
-        self::assertSame(1, $this->row($view->rows, 'patrol')->permissions);
+        self::assertSame(1, $this->row($view->rows, 'patrol')->grants);
         self::assertSame(8, $this->row($view->rows, 'patrol')->routes);
-        self::assertSame(0, $this->row($view->rows, 'storage')->permissions, 'infrastructure declares none through the registry.');
+        self::assertSame(0, $this->row($view->rows, 'storage')->grants, 'infrastructure declares none through the registry.');
 
         self::assertSame(1, $view->onCoreCount());
         self::assertSame(2, $view->pinsCoreCount(), 'area and patrol pin the core; shell and the core itself do not.');
-        self::assertSame(3, $view->totalPermissions());
+        self::assertSame(3, $view->totalGrants());
         self::assertSame(17, $view->totalRoutes());
     }
 
     private function registry(): ModuleRegistry
     {
-        $area = new FixtureModuleProvider('area', 'Area', true, 2);
-        $patrol = new FixtureModuleProvider('patrol', 'Patrol', false, 1);
+        $area = new FixtureModuleProvider('area', 'Area', true);
+        $patrol = new FixtureModuleProvider('patrol', 'Patrol');
 
         $areaPackage = ResolvedPackage::of('uhifadhi/area-module', '0.11.1');
         $patrolPackage = ResolvedPackage::of('uhifadhi/patrol-module', '0.2.2');
@@ -88,7 +89,12 @@ final class ModuleRegistryTest extends TestCase
         $packages->place($area, $areaPackage);
         $packages->place($patrol, $patrolPackage);
 
-        return new ModuleRegistry([$area, $patrol], $packages, new FakeRouter(['area' => 9, 'patrol' => 8]));
+        return new ModuleRegistry(
+            [$area, $patrol],
+            $packages,
+            new FakeRouter(['area' => 9, 'patrol' => 8]),
+            [new FixtureConcernSource('area', 2), new FixtureConcernSource('patrol', 1)],
+        );
     }
 
     /**

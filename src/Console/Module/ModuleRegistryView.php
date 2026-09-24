@@ -56,9 +56,9 @@ final readonly class ModuleRegistryView
         ));
     }
 
-    public function totalPermissions(): int
+    public function totalGrants(): int
     {
-        return array_sum(array_map(static fn (ModuleRow $r): int => $r->permissions, $this->rows));
+        return array_sum(array_map(static fn (ModuleRow $r): int => $r->grants, $this->rows));
     }
 
     public function totalRoutes(): int

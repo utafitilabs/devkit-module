@@ -16,6 +16,7 @@ namespace Uhifadhi\Devkit\Console\Module;
 use Composer\Semver\Semver;
 use Symfony\Component\Routing\RouterInterface;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Devkit\Console\Package\PackageIntrospector;
 use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
@@ -26,7 +27,7 @@ use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
  *
  * The rows are the Composer fleet (so an infrastructure package that carries no
  * module provider is still listed), enriched from the module tag where a
- * provider is registered: its declared permissions, and its stamped routes
+ * provider is registered: the grants its concerns declare, and its stamped routes
  * counted off the router. The core question is answered by comparing each
  * package's own `uhifadhi/uhifadhi` constraint against the core
  * version actually installed — {@see Semver}, not a string
@@ -44,12 +45,34 @@ final class ModuleRegistry
 
     /**
      * @param iterable<ModuleProviderInterface> $providers every module tagged with uhifadhi.module
+     * @param iterable<ConcernSourceInterface>  $concerns  every declaration tagged with uhifadhi.access.concerns
      */
     public function __construct(
         private readonly iterable $providers,
         private readonly PackageIntrospector $packages,
         private readonly RouterInterface $router,
+        private readonly iterable $concerns = [],
     ) {
+    }
+
+    /**
+     * HOW MANY GRANTS A MODULE PUTS ON THE POSITIONS PAGE — its declared
+     * concerns crossed with the verbs each one supports. A concern names the
+     * module that enforces it, which is what makes the count answerable from
+     * a declaration nobody had to register twice.
+     */
+    private function grantsOf(string $slug): int
+    {
+        $pairs = 0;
+        foreach ($this->concerns as $source) {
+            foreach ($source->concerns() as $concern) {
+                if ($slug === $concern->moduleSlug()) {
+                    $pairs += \count($concern->verbs());
+                }
+            }
+        }
+
+        return $pairs;
     }
 
     public function view(): ModuleRegistryView
@@ -78,7 +101,7 @@ final class ModuleRegistry
             package: $package,
             coreConstraint: $constraint,
             coreState: $this->coreState($isCore, $constraint, $currentCore),
-            permissions: null === $provider ? 0 : \count($provider->permissions()),
+            grants: null === $provider ? 0 : $this->grantsOf($provider->slug()),
             routes: null === $provider ? 0 : $this->routeCount($provider->slug()),
             reach: $this->reach($isCore, $provider),
         );

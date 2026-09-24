@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Devkit\Tests\Integration\Console\Fixtures;
 
-use Uhifadhi\Contracts\ModulePermission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 use Uhifadhi\Contracts\ModuleProviderTrait;
 
@@ -30,7 +29,6 @@ final class FixtureModuleProvider implements ModuleProviderInterface
         private readonly string $slug,
         private readonly string $name,
         private readonly bool $isBase = false,
-        private readonly int $permissionCount = 0,
     ) {
     }
 
@@ -52,20 +50,5 @@ final class FixtureModuleProvider implements ModuleProviderInterface
     public function base(): bool
     {
         return $this->isBase;
-    }
-
-    public function permissions(): array
-    {
-        $permissions = [];
-        for ($i = 1; $i <= $this->permissionCount; ++$i) {
-            $permissions[] = new ModulePermission(
-                \sprintf('%s.perm%d', $this->slug, $i),
-                ucfirst($this->name),
-                \sprintf('Action %d', $i),
-                \sprintf('Fixture permission %d for the %s module.', $i, $this->slug),
-            );
-        }
-
-        return $permissions;
     }
 }
