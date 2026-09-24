@@ -1,6 +1,6 @@
 {
     "name": "uhifadhi/devkit-module",
-    "description": "Devkit: the dev-only collector. Installed via require-dev, it gathers the inert Contracts\\Devkit\\ContentProviderInterface and CommandProviderInterface classes the core and other modules ship, and materialises them into a `fixtures:demo` seeder (run in dependsOn topological order) and real console commands \u2014 present only in a dev install.",
+    "description": "Devkit: the dev-only collector. Installed via require-dev, it gathers the inert Contracts\\Devkit\\ContentProviderInterface and CommandProviderInterface classes the core and other modules ship, and materialises them into a `fixtures:demo` seeder (run in dependsOn topological order) and real console commands — present only in a dev install.",
     "type": "symfony-bundle",
     "keywords": [
         "devkit",
@@ -34,7 +34,7 @@
         "symfony/http-kernel": "^7.3 || ^8.0",
         "symfony/routing": "^7.3 || ^8.0",
         "symfony/twig-bundle": "^7.3 || ^8.0",
-        "uhifadhi/uhifadhi": "^1.0@dev"
+        "uhifadhi/uhifadhi": "^0.1"
     },
     "autoload": {
         "psr-4": {
@@ -71,11 +71,6 @@
     },
     "config": {
         "sort-packages": true
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-main": "0.1-dev"
-        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
