@@ -339,15 +339,24 @@ final class GateRunner
 
         if (null !== $module->catalogueSlug) {
             $slug = $module->catalogueSlug;
-            $crawler = $browser->request('GET', $this->baseUrl.'/areas/'.$this->areaUuid.'/modules/customize');
-            $this->expectStatus($step, $browser, 'the area\'s module grid answers');
+            // The area's Modules configure section (core 0.1.2): one row per
+            // catalogued module, each carrying the toggle form that switches it
+            // on or off — action …/configure/modules/<slug>/toggle, a hidden
+            // `to` of on|off and the CSRF token. A module already running has
+            // `to=off`; the gate only ever switches on.
+            $crawler = $browser->request('GET', $this->baseUrl.'/areas/'.$this->areaUuid.'/configure/modules');
+            $this->expectStatus($step, $browser, 'the area\'s Modules configure section answers');
 
-            $forms = $crawler->filter('form')->reduce(static function (Crawler $node) use ($slug): bool {
-                $field = $node->filter('input[name="module"]')->getNode(0);
+            $row = $crawler->filter(\sprintf('tr[data-row-slug="%s"]', $slug));
+            if (0 === $row->count()) {
+                throw new GateFailure($step, (string) $browser->getResponse()->getContent(), \sprintf('the Modules section lists no row for "%s"', $slug));
+            }
+            $forms = $row->filter('form')->reduce(static function (Crawler $node): bool {
+                $to = $node->filter('input[name="to"]')->getNode(0);
 
-                return $field instanceof \DOMElement
-                    && $slug === $field->getAttribute('value')
-                    && str_contains((string) $node->attr('action'), '/install');
+                return $to instanceof \DOMElement
+                    && 'on' === $to->getAttribute('value')
+                    && str_contains((string) $node->attr('action'), '/configure/modules/');
             });
             if ($forms->count() > 0) {
                 $browser->submit($forms->first()->form());
