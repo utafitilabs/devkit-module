@@ -108,7 +108,7 @@ devkit:
         official_modules: ['storage', 'patrol', 'incident', 'roster']
         private_modules: ['telemetry']
         after_migrate: ['doctrine:migrations:migrate', 'registry:sync', 'cache:warmup']
-        area_name: 'Kilimani Crater Conservation Area'
+        area_name: 'Kilimani Game Reserve'
         modules:
             storage:   { page: '/files' }
             patrol:    { page: '/areas/%s/modules/patrols',   catalogue_slug: 'patrols' }

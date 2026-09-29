@@ -56,7 +56,7 @@ final class DevkitConfiguration
      * area, so the gate's data and the book's are one and the same and no
      * invented or real place ever enters it.
      */
-    public const string AREA_NAME = 'Kilimani Crater Conservation Area';
+    public const string AREA_NAME = 'Kilimani Game Reserve';
 
     /**
      * EVERY MODULE THE GATE KNOWS HOW TO INSTALL, keyed by its bare name. `page`
