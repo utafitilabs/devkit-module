@@ -1,12 +1,12 @@
 {
     "name": "uhifadhi/devkit-module",
-    "description": "Devkit: the dev-only collector. Installed via require-dev, it gathers the inert Contracts\\Devkit\\ContentProviderInterface and CommandProviderInterface classes the core and other modules ship, and materialises them into a `fixtures:demo` seeder (run in dependsOn topological order) and real console commands \u2014 present only in a dev install.",
+    "description": "Devkit: the dev-only collector. Installed via require-dev, it gathers the inert Contracts\\Devkit\\ContentProviderInterface and CommandProviderInterface classes the core and other modules ship, and materialises them into a `fixtures:seed` seeder (run in dependsOn topological order) and real console commands \u2014 present only in a dev install.",
     "type": "symfony-bundle",
     "keywords": [
         "devkit",
         "fixtures",
         "seeding",
-        "demo",
+        "seed",
         "dev-tools",
         "symfony",
         "uhifadhi"
