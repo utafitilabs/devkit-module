@@ -22,14 +22,14 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Uhifadhi\Bundle\AreaBundle\Devkit\DemoArea;
+use Uhifadhi\Bundle\AreaBundle\Devkit\SeedArea;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 
 /**
- * THE GROUND UNDER THE DEMO ORGANIZATION — areas, the zones that subdivide them,
+ * THE GROUND UNDER THE SEED ORGANIZATION — areas, the zones that subdivide them,
  * the stations standing in those zones, and the people posted to them.
  *
  * FOUR PROVIDERS, ONE ORDER, ASKED THROUGH THE COMMAND. Each of them is a slice
@@ -45,11 +45,11 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
  * provider that seeded half of it would show as a half-drawn page rather than
  * as a passing test.
  *
- * AND IT IS ASKED TWICE. `fixtures:demo` is a command a developer re-runs
+ * AND IT IS ASKED TWICE. `fixtures:seed` is a command a developer re-runs
  * without thinking about it, and a second run that doubled the stations would
  * be a bug discovered on a screen days later.
  */
-final class DemoGroundTest extends TestCase
+final class SeedGroundTest extends TestCase
 {
     private KernelInterface $kernel;
     private Application $console;
@@ -72,38 +72,38 @@ final class DemoGroundTest extends TestCase
         $this->kernel->shutdown();
     }
 
-    public function testEveryDemoAreaIsSubdividedIntoAZoningScheme(): void
+    public function testEverySeedAreaIsSubdividedIntoAZoningScheme(): void
     {
         $areas = $this->areas();
 
-        self::assertNotEmpty($areas, 'The zones and the stations hang on the demo areas, so an empty register is the whole slice missing.');
+        self::assertNotEmpty($areas, 'The zones and the stations hang on the seed areas, so an empty register is the whole slice missing.');
 
         foreach ($areas as $area) {
             self::assertCount(
-                self::zonesInTheScheme(),
+                self::zonesInTheScheme($area),
                 $this->zonesOf($area),
                 \sprintf('%s is seeded with a whole zoning scheme, imported as one FeatureCollection.', (string) $area->getName()),
             );
         }
     }
 
-    public function testEveryStationStandsInTheAreaAndAllButOneInAZone(): void
+    public function testEveryStationStandsInTheAreaAndInAZone(): void
     {
         foreach ($this->areas() as $area) {
             $stations = $this->stationsOf($area);
 
             self::assertCount(
-                \count(self::theGround()->stations()),
+                \count(self::groundOf($area)->stations()),
                 $stations,
                 'Every post the ground describes is on the area\'s own map.',
             );
 
             $unzoned = array_filter($stations, static fn (Station $station): bool => null === $station->getZone());
 
-            self::assertCount(
-                1,
-                $unzoned,
-                'A station on ground no zone covers is a real state the screens have to draw, so the demo carries exactly one.',
+            self::assertSame(
+                [],
+                array_values(array_map(static fn (Station $station): string => (string) $station->getName(), $unzoned)),
+                \sprintf('%s is zoned edge to edge, so every post stands in a zone.', (string) $area->getName()),
             );
         }
     }
@@ -143,7 +143,7 @@ final class DemoGroundTest extends TestCase
             }
 
             self::assertSame(
-                self::postsLeftEmpty(),
+                self::postsLeftEmpty($area),
                 $unstaffed,
                 \sprintf('A post nobody works out of is a state %s has to draw too.', (string) $area->getName()),
             );
@@ -199,7 +199,7 @@ final class DemoGroundTest extends TestCase
     private function seed(): void
     {
         $output = new BufferedOutput();
-        $exitCode = $this->console->run(new ArrayInput(['command' => 'fixtures:demo']), $output);
+        $exitCode = $this->console->run(new ArrayInput(['command' => 'fixtures:seed']), $output);
 
         self::assertSame(0, $exitCode, $output->fetch());
     }
@@ -234,29 +234,35 @@ final class DemoGroundTest extends TestCase
      *
      * A TEST THAT RETYPES A NUMBER THE CODE ALSO STATES has to be edited
      * every time the code is right. These assertions said eight posts and
-     * one empty one; the ground grew to twelve with two empty, the demo
+     * one empty one; the ground grew to twelve with two empty, the seed
      * was correct, and this suite went red in another repository to say
      * so. What each of them is actually about — every post described is
      * on the map, every staffed post has exactly one leader, the posts
      * meant to be empty are the ones that are — is unchanged by a resize,
      * so none of them should notice one.
      *
-     * THE TABLE IS THE SAME FOR EVERY DEMO AREA, which is why the first
-     * one answers for all of them.
+     * EACH RESERVE HAS GROUND OF ITS OWN — its own zones and its own posts —
+     * so each seeded area is held to the table of the reserve it is.
      */
-    private static function theGround(): DemoArea
+    private static function groundOf(AreaOfInterest $area): SeedArea
     {
-        return DemoArea::all()[0];
+        foreach (SeedArea::all() as $reserve) {
+            if ($reserve->name === $area->getName()) {
+                return $reserve;
+            }
+        }
+
+        self::fail(\sprintf('%s is not one of the seed reserves.', (string) $area->getName()));
     }
 
     /**
      * HOW MANY ZONES THE SCHEME CARRIES, counted from the FeatureCollection
-     * the demo actually imports — the same document the installation reads,
+     * the seed actually imports — the same document the installation reads,
      * so this cannot disagree with what was seeded.
      */
-    private static function zonesInTheScheme(): int
+    private static function zonesInTheScheme(AreaOfInterest $area): int
     {
-        $scheme = json_decode(self::theGround()->zoneScheme(), true, 512, \JSON_THROW_ON_ERROR);
+        $scheme = json_decode(self::groundOf($area)->zoneScheme(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertIsArray($scheme);
         self::assertArrayHasKey('features', $scheme);
         self::assertIsArray($scheme['features']);
@@ -265,10 +271,10 @@ final class DemoGroundTest extends TestCase
     }
 
     /** How many posts the ground deliberately leaves nobody at. */
-    private static function postsLeftEmpty(): int
+    private static function postsLeftEmpty(AreaOfInterest $area): int
     {
         $empty = 0;
-        foreach (self::theGround()->stations() as $post) {
+        foreach (self::groundOf($area)->stations() as $post) {
             if (0 === $post->posted) {
                 ++$empty;
             }

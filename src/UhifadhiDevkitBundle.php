@@ -34,7 +34,7 @@ use Uhifadhi\Devkit\DependencyInjection\DevkitConfiguration;
  * always-installed module can name them even when devkit is not present — and
  * materialise them into things a developer can run:
  *
- *   - every {@see ContentProviderInterface} becomes a step of `fixtures:demo`,
+ *   - every {@see ContentProviderInterface} becomes a step of `fixtures:seed`,
  *     seeded in dependsOn() topological order;
  *   - every {@see CommandProviderInterface}'s descriptors become real console
  *     commands.
@@ -51,7 +51,7 @@ use Uhifadhi\Devkit\DependencyInjection\DevkitConfiguration;
 final class UhifadhiDevkitBundle extends AbstractBundle
 {
     /**
-     * Tag for {@see ContentProviderInterface} services. `fixtures:demo` collects
+     * Tag for {@see ContentProviderInterface} services. `fixtures:seed` collects
      * everything carrying it. Modules add it as a literal string.
      */
     public const string CONTENT_PROVIDER_TAG = 'uhifadhi.devkit.content_provider';

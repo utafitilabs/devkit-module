@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Devkit\Content;
 
 /**
- * The demo-content dependency graph could not be resolved into a run order.
+ * The seed-content dependency graph could not be resolved into a run order.
  *
  * Every one of the three ways that can happen is a MISTAKE IN A MODULE'S
  * PROVIDER, not a runtime condition to recover from: two providers claiming the
@@ -27,12 +27,12 @@ final class ContentOrderingException extends \RuntimeException
 {
     public static function duplicateKey(string $key): self
     {
-        return new self(\sprintf('Two demo-content providers both declare the key "%s". A key is a stable machine identity that other providers name in dependsOn(); it must be unique. A module that seeds two slices ships two providers with two DIFFERENT keys.', $key));
+        return new self(\sprintf('Two seed-content providers both declare the key "%s". A key is a stable machine identity that other providers name in dependsOn(); it must be unique. A module that seeds two slices ships two providers with two DIFFERENT keys.', $key));
     }
 
     public static function unknownDependency(string $key, string $missing): self
     {
-        return new self(\sprintf('The demo-content provider "%s" dependsOn "%s", but no installed provider declares that key. Install the module that supplies "%s", or correct the dependsOn() entry.', $key, $missing, $missing));
+        return new self(\sprintf('The seed-content provider "%s" dependsOn "%s", but no installed provider declares that key. Install the module that supplies "%s", or correct the dependsOn() entry.', $key, $missing, $missing));
     }
 
     /**
@@ -41,6 +41,6 @@ final class ContentOrderingException extends \RuntimeException
      */
     public static function cycle(array $cycle): self
     {
-        return new self(\sprintf('The demo-content providers form a dependency cycle and cannot be ordered: %s. dependsOn() must describe a one-way "built on top of" relationship; a loop has no first step to seed.', implode(' -> ', $cycle)));
+        return new self(\sprintf('The seed-content providers form a dependency cycle and cannot be ordered: %s. dependsOn() must describe a one-way "built on top of" relationship; a loop has no first step to seed.', implode(' -> ', $cycle)));
     }
 }

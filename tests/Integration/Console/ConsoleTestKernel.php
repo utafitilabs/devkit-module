@@ -36,7 +36,7 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
  * data that would need one is the flagged deferral, not a boot requirement.
  *
  * The kernel plays the ALWAYS-INSTALLED MODULES: it tags a few fixture providers
- * — demo-content, a command, and two module providers on the `uhifadhi.module`
+ * — seed-content, a command, and two module providers on the `uhifadhi.module`
  * tag — by hand, exactly as a reusable module bundle tags its own. devkit's
  * introspection then reads them just as it would a real dev install. The
  * registry is intentionally NOT registered: the console reads the module tag as
@@ -88,7 +88,7 @@ final class ConsoleTestKernel extends Kernel
 
         $services = $container->services();
 
-        // The always-installed modules' inert demo-content providers, tagged by
+        // The always-installed modules' inert seed-content providers, tagged by
         // hand (a reusable bundle's services are not autoconfigured).
         foreach ([
             'devkit.test.content.area' => ['area', []],

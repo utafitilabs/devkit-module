@@ -20,7 +20,7 @@ use Uhifadhi\Devkit\Content\ContentOrderingException;
 use Uhifadhi\Devkit\Tests\Fixtures\FakeContentProvider;
 
 /**
- * The topological sort behind fixtures:demo: dependsOn() edges become a run
+ * The topological sort behind fixtures:seed: dependsOn() edges become a run
  * order where every provider follows the content it is built on, ties break to
  * registration order, and all three ways the graph can be malformed fail loudly.
  */

@@ -31,7 +31,7 @@ final class FakeContentProvider implements ContentProviderInterface
         private readonly array $dependsOn = [],
         private readonly ?\Closure $onLoad = null,
         private readonly ?string $label = null,
-        private readonly string $description = 'Fake demo content.',
+        private readonly string $description = 'Fake seed content.',
     ) {
     }
 

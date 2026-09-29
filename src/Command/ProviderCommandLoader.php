@@ -30,7 +30,7 @@ use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
  * extension point Symfony provides for "resolve a command by name, lazily": this one wraps
  * the container's ContainerCommandLoader, answers for every descriptor name, and
  * delegates everything else — the application's own commands, including
- * devkit's fixtures:demo — to the inner loader untouched.
+ * devkit's fixtures:seed — to the inner loader untouched.
  *
  * Two providers that declare the same command name is a module mistake, refused
  * loudly the first time the map is built rather than silently letting one shadow
@@ -94,7 +94,7 @@ final class ProviderCommandLoader implements CommandLoaderInterface
         foreach ($this->providers as $provider) {
             foreach ($provider->commands() as $descriptor) {
                 if (isset($map[$descriptor->name])) {
-                    throw new CommandNotFoundException(\sprintf('Two devkit command providers both declare the command "%s". A command name must be unique across every installed module; namespace it by module (e.g. "patrol:demo:reset").', $descriptor->name));
+                    throw new CommandNotFoundException(\sprintf('Two devkit command providers both declare the command "%s". A command name must be unique across every installed module; namespace it by module (e.g. "patrol:seed:reset").', $descriptor->name));
                 }
                 $map[$descriptor->name] = $descriptor;
             }

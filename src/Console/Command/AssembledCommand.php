@@ -19,7 +19,7 @@ namespace Uhifadhi\Devkit\Console\Command;
  *
  * The identifier is the descriptor's console name for a command
  * ({@see CommandKind::Command}), and the content provider's key for a
- * demo-content step ({@see CommandKind::DemoContent}) — a content provider ships
+ * seed-content step ({@see CommandKind::SeedContent}) — a content provider ships
  * no command name, because it is not a command, and the console shows the honest
  * key rather than inventing one.
  *

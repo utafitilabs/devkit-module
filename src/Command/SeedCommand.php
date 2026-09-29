@@ -23,7 +23,7 @@ use Uhifadhi\Devkit\Content\ContentOrderer;
 use Uhifadhi\Devkit\Content\ContentOrderingException;
 
 /**
- * `fixtures:demo` — seed every installed module's demo content, in dependency
+ * `fixtures:seed` — seed every installed module's seed content, in dependency
  * order.
  *
  * There is no hand-written list of steps to keep in step with the installed
@@ -40,10 +40,10 @@ use Uhifadhi\Devkit\Content\ContentOrderingException;
  * says there is nothing to seed and exits cleanly.
  */
 #[AsCommand(
-    name: 'fixtures:demo',
-    description: 'Seed every installed module\'s demo content, in dependsOn() order (dev-only).',
+    name: 'fixtures:seed',
+    description: 'Seed every installed module\'s seed content, in dependsOn() order (dev-only).',
 )]
-final class DemoCommand extends Command
+final class SeedCommand extends Command
 {
     /**
      * @param iterable<ContentProviderInterface> $providers every content
@@ -73,12 +73,12 @@ final class DemoCommand extends Command
         }
 
         if ([] === $ordered) {
-            $io->note('No demo-content providers are installed — nothing to seed. A module contributes one by tagging a Devkit\ContentProviderInterface service.');
+            $io->note('No seed-content providers are installed — nothing to seed. A module contributes one by tagging a Devkit\ContentProviderInterface service.');
 
             return Command::SUCCESS;
         }
 
-        $io->title('Seeding demo content');
+        $io->title('Seeding seed content');
 
         foreach ($ordered as $provider) {
             $io->section(\sprintf('%s (%s)', $provider->label(), $provider->key()));
@@ -86,7 +86,7 @@ final class DemoCommand extends Command
             $provider->load();
         }
 
-        $io->success(\sprintf('Seeded %d demo-content slice(s), in dependency order.', \count($ordered)));
+        $io->success(\sprintf('Seeded %d seed-content slice(s), in dependency order.', \count($ordered)));
 
         return Command::SUCCESS;
     }

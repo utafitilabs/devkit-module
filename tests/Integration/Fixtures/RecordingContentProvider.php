@@ -51,7 +51,7 @@ final class RecordingContentProvider implements ContentProviderInterface
 
     public function description(): string
     {
-        return \sprintf('Recording demo content for "%s".', $this->key);
+        return \sprintf('Recording seed content for "%s".', $this->key);
     }
 
     public function dependsOn(): array

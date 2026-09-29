@@ -55,7 +55,7 @@ final class ContributionPointInspector
         'uhifadhi.overview.attention' => 'Items a module puts in the overview\'s attention list.',
         'uhifadhi.overview.pulse' => 'Events a module contributes to the activity feed.',
         'uhifadhi.overview.copy' => 'Copy fragments a module writes into a named slot.',
-        'uhifadhi.devkit.content_provider' => 'Demo-content slices devkit seeds through fixtures:demo, in dependency order.',
+        'uhifadhi.devkit.content_provider' => 'Seed-content slices devkit seeds through fixtures:seed, in dependency order.',
         'uhifadhi.devkit.command_provider' => 'Dev/maintenance commands devkit registers as real console commands in a dev install.',
     ];
 

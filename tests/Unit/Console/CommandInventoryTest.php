@@ -27,8 +27,8 @@ final class CommandInventoryTest extends TestCase
     {
         $catalogue = new CommandInventory([], [], new FakePackageIntrospector())->catalogue();
 
-        self::assertSame('fixtures:demo', $catalogue->hero()->name);
-        self::assertSame(CommandKind::DemoContent, $catalogue->hero()->kind);
+        self::assertSame('fixtures:seed', $catalogue->hero()->name);
+        self::assertSame(CommandKind::SeedContent, $catalogue->hero()->kind);
         self::assertSame('devkit', $catalogue->groups[0]->label, 'devkit leads the assembled list.');
     }
 
@@ -66,8 +66,8 @@ final class CommandInventoryTest extends TestCase
 
         $catalogue = new CommandInventory([$patrolContent, $incidentContent], [$command], $packages)->catalogue();
 
-        self::assertSame(4, $catalogue->total(), 'hero + two demo loaders + one command.');
-        self::assertSame(3, $catalogue->demoContentCount(), 'hero + two content providers.');
+        self::assertSame(4, $catalogue->total(), 'hero + two seed loaders + one command.');
+        self::assertSame(3, $catalogue->seedContentCount(), 'hero + two content providers.');
         self::assertSame(0, $catalogue->deprecatedCount(), 'No contract carries a deprecation signal — a flagged gap, always 0 in v1.');
         self::assertSame(3, $catalogue->contributorCount(), 'devkit, patrol and incident each contribute at least one.');
     }
