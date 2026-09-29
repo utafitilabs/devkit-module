@@ -39,7 +39,7 @@
         "symfony/process": "^7.3 || ^8.0",
         "symfony/routing": "^7.3 || ^8.0",
         "symfony/twig-bundle": "^7.3 || ^8.0",
-        "uhifadhi/uhifadhi": "^0.1"
+        "uhifadhi/uhifadhi": "^0.1.17"
     },
     "autoload": {
         "psr-4": {
