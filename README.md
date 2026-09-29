@@ -69,7 +69,7 @@ command cannot see, and that appears uninvited in a test run.
 ## `area:zones:import` — a zoning scheme from a file
 
 ```console
-bin/console area:zones:import <area-uuid> <file.geojson>
+symfony console area:zones:import <area-uuid> <file.geojson>
 ```
 
 One GeoJSON FeatureCollection, one feature per zone, into an area that already
@@ -99,9 +99,9 @@ one question.
 ## `fleet:gate` — the whole fleet, installed
 
 ```console
-bin/console fleet:gate                 # the fleet as published
-bin/console fleet:gate --mode=head     # the fleet as the sibling checkouts have it
-bin/console fleet:gate --dry-run       # the plan, and none of it performed
+symfony console fleet:gate                 # the fleet as published
+symfony console fleet:gate --mode=head     # the fleet as the sibling checkouts have it
+symfony console fleet:gate --dry-run       # the plan, and none of it performed
 ```
 
 The gate creates a project from the starter with the starter's own commands and
@@ -196,6 +196,8 @@ collect the providers. Neither side depends on the other. See the core's
 
 ## Installing it
 
+Commands run through the Symfony CLI — `symfony console …` — which hands the project the addresses of the services the skeleton's `compose.yaml` starts. Served some other way, run `php bin/console …` with those addresses written into `.env.local`.
+
 ```console
 composer require --dev uhifadhi/devkit-module
 ```
@@ -208,8 +210,8 @@ The commands the installed modules describe appear on the console at once,
 including the core's own:
 
 ```console
-bin/console team:user:create
-bin/console fixtures:seed
+symfony console team:user:create
+symfony console fixtures:seed
 ```
 
 The first is how an installation gets its first administrator — the one account
@@ -217,7 +219,7 @@ no screen can make, because every screen is behind the sign-in it does not yet
 have. It asks for whatever it was not told, and the passphrase is never echoed:
 
 ```console
-$ bin/console team:user:create
+$ symfony console team:user:create
 Email address: ada@example.test
 First name: Ada
 Last name: Mwangi
@@ -237,6 +239,6 @@ wants — and there `readSecret()` reads the piped line plainly, because a pipe
 has no echo to switch off:
 
 ```console
-printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
-bin/console team:user:create ada@example.test Ada Mwangi --tier=staff --password="$PASSPHRASE"
+printf '%s' "$PASSPHRASE" | symfony console team:user:create ada@example.test Ada Mwangi
+symfony console team:user:create ada@example.test Ada Mwangi --tier=staff --password="$PASSPHRASE"
 ```
