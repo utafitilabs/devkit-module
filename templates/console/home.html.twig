@@ -15,7 +15,7 @@
 
 {% block devkit_content %}
     <div class="grid g4" style="margin-bottom:8px">
-        <div class="c"><span class="tab">commands</span><div class="kpi"><b>{{ catalogue.total }}</b><div class="sub">from {{ catalogue.contributorCount }} modules &middot; {{ catalogue.demoContentCount }} demo loaders</div></div></div>
+        <div class="c"><span class="tab">commands</span><div class="kpi"><b>{{ catalogue.total }}</b><div class="sub">from {{ catalogue.contributorCount }} modules &middot; {{ catalogue.seedContentCount }} seed loaders</div></div></div>
         <div class="c"><span class="tab">modules</span><div class="kpi"><b>{{ registry.installedCount }}</b><div class="sub">installed &middot; {{ registry.onCoreCount }} on current core</div></div></div>
         <div class="c"><span class="tab">doctor</span><div class="kpi{{ (report.warnCount + report.failCount) > 0 ? ' hot' }}"><b>{{ report.warnCount }}<em>warn</em> {{ report.failCount }}<em>fail</em></b><div class="sub">of {{ report.computedCheckCount }} doctor checks</div></div></div>
         <div class="c"><span class="tab">wiring</span><div class="kpi"><b>{{ inspector.pointCount }}</b><div class="sub">{{ inspector.providerCount }} providers collected</div></div></div>
