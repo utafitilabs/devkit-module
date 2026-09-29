@@ -18,15 +18,15 @@ namespace Uhifadhi\Devkit\Console\Command;
  * counts the surfaces head themselves with.
  *
  * The devkit group is always present and always first: devkit contributes
- * `fixtures:demo`, the one command that stands a fresh park up, and it is the
+ * `fixtures:seed`, the one command that stands a fresh park up, and it is the
  * hero of the home surface. The home page renders that hero and then the
  * modules' contributions; the Commands page renders every group, devkit
  * included.
  */
 final readonly class CommandCatalogue
 {
-    /** The command name devkit contributes itself — the one it materialises from every module's demo content. */
-    public const string HERO_COMMAND = 'fixtures:demo';
+    /** The command name devkit contributes itself — the one it materialises from every module's seed content. */
+    public const string HERO_COMMAND = 'fixtures:seed';
 
     /**
      * @param list<CommandGroup> $groups devkit first, then the modules in
@@ -38,7 +38,7 @@ final readonly class CommandCatalogue
     }
 
     /**
-     * `fixtures:demo`, devkit's own — rendered loud on the home surface.
+     * `fixtures:seed`, devkit's own — rendered loud on the home surface.
      */
     public function hero(): AssembledCommand
     {
@@ -51,7 +51,7 @@ final readonly class CommandCatalogue
         }
 
         // devkit always contributes it; unreachable in a real install.
-        return new AssembledCommand(self::HERO_COMMAND, CommandKind::DemoContent, 'Load the full cross-module demo dataset.');
+        return new AssembledCommand(self::HERO_COMMAND, CommandKind::SeedContent, 'Load the full cross-module seed dataset.');
     }
 
     /**
@@ -77,11 +77,11 @@ final readonly class CommandCatalogue
     }
 
     /**
-     * How many of the assembled entries are demo-content loaders.
+     * How many of the assembled entries are seed-content loaders.
      */
-    public function demoContentCount(): int
+    public function seedContentCount(): int
     {
-        return \count($this->commandsWhere(static fn (AssembledCommand $c): bool => CommandKind::DemoContent === $c->kind));
+        return \count($this->commandsWhere(static fn (AssembledCommand $c): bool => CommandKind::SeedContent === $c->kind));
     }
 
     /**

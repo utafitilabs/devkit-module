@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Uhifadhi\Devkit\Command\DemoCommand;
+use Uhifadhi\Devkit\Command\SeedCommand;
 use Uhifadhi\Devkit\Content\ContentOrderer;
 use Uhifadhi\Devkit\UhifadhiDevkitBundle;
 
@@ -49,17 +49,17 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
 
-    // The topological sorter behind fixtures:demo. Stateless, so one shared
+    // The topological sorter behind fixtures:seed. Stateless, so one shared
     // instance serves every run.
     $services->set('devkit.content_orderer', ContentOrderer::class);
 
     /*
-     * `fixtures:demo` — collects every tagged ContentProviderInterface and seeds
+     * `fixtures:seed` — collects every tagged ContentProviderInterface and seeds
      * them in dependsOn() order. The iterator is EMPTY on an installation that
      * has registered no providers, and an empty seed is the correct reading of
-     * that rather than an error (see DemoCommand).
+     * that rather than an error (see SeedCommand).
      */
-    $services->set('devkit.command.demo', DemoCommand::class)
+    $services->set('devkit.command.seed', SeedCommand::class)
         ->args([
             tagged_iterator(UhifadhiDevkitBundle::CONTENT_PROVIDER_TAG),
             service('devkit.content_orderer'),

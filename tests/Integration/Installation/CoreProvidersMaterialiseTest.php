@@ -156,9 +156,9 @@ final class CoreProvidersMaterialiseTest extends TestCase
     /**
      * The other half of the contract: the content providers, ordered and run.
      */
-    public function testTheDemoContentCommandSeedsTheCoresOrganization(): void
+    public function testTheSeedContentCommandSeedsTheCoresOrganization(): void
     {
-        $output = $this->execute(['command' => 'fixtures:demo']);
+        $output = $this->execute(['command' => 'fixtures:seed']);
 
         self::assertStringContainsString('Team', $output, 'The provider names itself while seeding.');
 
@@ -166,7 +166,7 @@ final class CoreProvidersMaterialiseTest extends TestCase
 
         self::assertNotEmpty(
             $departments,
-            'The demo organization is departments, the positions filed under them and the people who hold them. An empty table means the provider was described but never called.',
+            'The seed organization is departments, the positions filed under them and the people who hold them. An empty table means the provider was described but never called.',
         );
 
         $people = $this->entityManager()->getRepository(User::class)->findAll();

@@ -21,7 +21,7 @@
     {% import _self as parts %}
     <div class="dk-cmd{{ cmd.deprecated ? ' dep' }}">
         <div class="bd">
-            <div class="nm">{{ cmd.name }} <span class="kind{{ cmd.kind.value == 'demo-content' ? ' content' }}">{{ cmd.kind.value }}</span></div>
+            <div class="nm">{{ cmd.name }} <span class="kind{{ cmd.kind.value == 'seed-content' ? ' content' }}">{{ cmd.kind.value }}</span></div>
             <div class="ds">{{ cmd.description }}</div>
         </div>
         {{ parts.run() }}

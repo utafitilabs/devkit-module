@@ -42,7 +42,7 @@ final class ProviderCommandLoaderTest extends TestCase
     private function inner(): FactoryCommandLoader
     {
         return new FactoryCommandLoader([
-            'fixtures:demo' => static fn (): Command => new Command('fixtures:demo'),
+            'fixtures:seed' => static fn (): Command => new Command('fixtures:seed'),
         ]);
     }
 
@@ -51,7 +51,7 @@ final class ProviderCommandLoaderTest extends TestCase
         $ran = false;
         $loader = $this->loader($this->inner(), [
             new FakeCommandProvider([
-                new CommandDescriptor('patrol:demo:reset', 'Reset patrol demo.', static function (array $arguments) use (&$ran): int {
+                new CommandDescriptor('patrol:seed:reset', 'Reset patrol seed.', static function (array $arguments) use (&$ran): int {
                     $ran = true;
 
                     return 0;
@@ -59,9 +59,9 @@ final class ProviderCommandLoaderTest extends TestCase
             ]),
         ]);
 
-        self::assertTrue($loader->has('patrol:demo:reset'));
+        self::assertTrue($loader->has('patrol:seed:reset'));
 
-        $command = $loader->get('patrol:demo:reset');
+        $command = $loader->get('patrol:seed:reset');
         self::assertInstanceOf(DescriptorCommand::class, $command);
 
         // And it actually runs the descriptor's handler.
@@ -73,22 +73,22 @@ final class ProviderCommandLoaderTest extends TestCase
     {
         $loader = $this->loader($this->inner(), []);
 
-        self::assertTrue($loader->has('fixtures:demo'));
-        self::assertSame('fixtures:demo', $loader->get('fixtures:demo')->getName());
+        self::assertTrue($loader->has('fixtures:seed'));
+        self::assertSame('fixtures:seed', $loader->get('fixtures:seed')->getName());
     }
 
     public function testGetNamesMergesDescriptorAndInnerNames(): void
     {
         $loader = $this->loader($this->inner(), [
             new FakeCommandProvider([
-                new CommandDescriptor('patrol:demo:reset', 'Reset patrol demo.', static fn (array $arguments): int => 0),
+                new CommandDescriptor('patrol:seed:reset', 'Reset patrol seed.', static fn (array $arguments): int => 0),
             ]),
         ]);
 
         $names = $loader->getNames();
 
-        self::assertContains('patrol:demo:reset', $names);
-        self::assertContains('fixtures:demo', $names);
+        self::assertContains('patrol:seed:reset', $names);
+        self::assertContains('fixtures:seed', $names);
     }
 
     public function testAnUnknownNameStillThrowsFromTheInnerLoader(): void
@@ -102,13 +102,13 @@ final class ProviderCommandLoaderTest extends TestCase
     public function testTwoProvidersClaimingTheSameNameAreRefused(): void
     {
         $loader = $this->loader($this->inner(), [
-            new FakeCommandProvider([new CommandDescriptor('demo:clash', 'One.', static fn (array $arguments): int => 0)]),
-            new FakeCommandProvider([new CommandDescriptor('demo:clash', 'Two.', static fn (array $arguments): int => 0)]),
+            new FakeCommandProvider([new CommandDescriptor('seed:clash', 'One.', static fn (array $arguments): int => 0)]),
+            new FakeCommandProvider([new CommandDescriptor('seed:clash', 'Two.', static fn (array $arguments): int => 0)]),
         ]);
 
         $this->expectException(CommandNotFoundException::class);
-        $this->expectExceptionMessage('both declare the command "demo:clash"');
+        $this->expectExceptionMessage('both declare the command "seed:clash"');
 
-        $loader->has('demo:clash');
+        $loader->has('seed:clash');
     }
 }

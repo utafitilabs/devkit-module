@@ -21,7 +21,7 @@ use Uhifadhi\Devkit\Tests\Integration\Fixtures\RecordingContentProvider;
 
 /**
  * The whole collector, wired through the real container: the bundle boots,
- * devkit collects the tagged providers, fixtures:demo seeds the content
+ * devkit collects the tagged providers, fixtures:seed seeds the content
  * providers in dependency order, and a command provider's descriptor is a
  * console command the application can find and run.
  */
@@ -33,12 +33,12 @@ final class BundleBootTest extends KernelTestCase
         RecordingCommandProvider::reset();
     }
 
-    public function testFixturesDemoSeedsTaggedProvidersInDependencyOrder(): void
+    public function testFixturesSeedSeedsTaggedProvidersInDependencyOrder(): void
     {
         $application = new Application(self::bootKernel());
         $application->setAutoExit(false);
 
-        $tester = new CommandTester($application->find('fixtures:demo'));
+        $tester = new CommandTester($application->find('fixtures:seed'));
         $exit = $tester->execute([]);
 
         self::assertSame(0, $exit);

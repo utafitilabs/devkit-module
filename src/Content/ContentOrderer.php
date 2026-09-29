@@ -17,7 +17,7 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
  * Turns the collected {@see ContentProviderInterface} services into the order
- * `fixtures:demo` seeds them in — a TOPOLOGICAL SORT over the dependsOn() edges.
+ * `fixtures:seed` seeds them in — a TOPOLOGICAL SORT over the dependsOn() edges.
  *
  * The contract deliberately expresses ordering as dependencies rather than a
  * priority integer ("area needs to exist before an incident hangs on it"), so

@@ -56,7 +56,7 @@ final class ConsolePageTest extends TestCase
     {
         $crawler = $this->get('/_devkit');
 
-        self::assertStringContainsString('fixtures:demo', $crawler->filter('.dk-hero')->text(), 'The hero is the one command that stands a park up.');
+        self::assertStringContainsString('fixtures:seed', $crawler->filter('.dk-hero')->text(), 'The hero is the one command that stands a park up.');
         self::assertGreaterThan(0, $crawler->filter('table.tbl .dk-name')->count(), 'The module registry leads here too.');
         self::assertCount(1, $crawler->filter('table.dk-mx'), 'The live compatibility grid is on the home.');
         self::assertGreaterThanOrEqual(4, $crawler->filter('.grid.g4 .kpi')->count(), 'Four at-a-glance KPIs.');
@@ -68,7 +68,7 @@ final class ConsolePageTest extends TestCase
 
         self::assertGreaterThan(0, $crawler->filter('.dk-grp')->count(), 'Commands are grouped by contributing module.');
         $text = $crawler->filter('div.pgbody')->text();
-        self::assertStringContainsString('fixtures:demo', $text);
+        self::assertStringContainsString('fixtures:seed', $text);
         self::assertStringContainsString('devkit:test:echo', $text, 'A tagged command provider becomes a listed command.');
         self::assertStringContainsString('deprecat', $text, 'The deprecation gap is flagged on the surface.');
     }

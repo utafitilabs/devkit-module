@@ -100,7 +100,7 @@ final class ContributionPointInspectorTest extends TestCase
         $inspector = $this->inspector();
 
         self::assertSame(\count(ContributionPointInspector::CONTRIBUTION_POINTS), $inspector->pointCount());
-        self::assertSame(3, $inspector->providerCount(), 'two on the module tag, one demo-content provider.');
+        self::assertSame(3, $inspector->providerCount(), 'two on the module tag, one seed-content provider.');
         self::assertSame(2, $inspector->contributorCount(), 'patrol and incident.');
         self::assertSame(['tag' => 'uhifadhi.module', 'count' => 2], $inspector->widest());
     }
@@ -113,7 +113,7 @@ final class ContributionPointInspectorTest extends TestCase
         ]);
 
         // The module tag carries two FixtureModuleProvider registrations (patrol
-        // and incident, same class, different modules); one demo-content provider.
+        // and incident, same class, different modules); one seed-content provider.
         // A pass hands the inspector class names, so both module registrations
         // read as the same class — the count is what matters.
         $collected = [

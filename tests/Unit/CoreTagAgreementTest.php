@@ -29,7 +29,7 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
  * language stops the two from drifting apart.
  *
  * Nothing except this. A drift would not break a build or throw: devkit's
- * iterator would simply come back empty and `fixtures:demo` would report a
+ * iterator would simply come back empty and `fixtures:seed` would report a
  * successful seed of nothing. That is the failure this pins — read out of the
  * core's own shipped service file, so the assertion is against what the
  * providers are really tagged with rather than against a string this suite also
@@ -45,7 +45,7 @@ final class CoreTagAgreementTest extends TestCase
         self::assertStringContainsString(
             "->tag('".UhifadhiDevkitBundle::CONTENT_PROVIDER_TAG."')",
             self::coreServices(),
-            'The core tags its content provider with a literal string. fixtures:demo collects on a constant. They are the same string or the seed is empty.',
+            'The core tags its content provider with a literal string. fixtures:seed collects on a constant. They are the same string or the seed is empty.',
         );
     }
 

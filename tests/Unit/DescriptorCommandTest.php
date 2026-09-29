@@ -33,19 +33,19 @@ final class DescriptorCommandTest extends TestCase
     public function testItTakesItsNameAndDescriptionFromTheDescriptor(): void
     {
         $command = new DescriptorCommand(new CommandDescriptor(
-            'patrol:demo:reset',
-            'Wipe and reseed the patrol demo content.',
+            'patrol:seed:reset',
+            'Wipe and reseed the patrol seed content.',
             static fn (array $arguments): int => 0,
         ));
 
-        self::assertSame('patrol:demo:reset', $command->getName());
-        self::assertSame('Wipe and reseed the patrol demo content.', $command->getDescription());
+        self::assertSame('patrol:seed:reset', $command->getName());
+        self::assertSame('Wipe and reseed the patrol seed content.', $command->getDescription());
     }
 
     public function testItReturnsTheHandlersExitCode(): void
     {
         $command = new DescriptorCommand(new CommandDescriptor(
-            'demo:fail',
+            'seed:fail',
             'Always fails.',
             static fn (array $arguments): int => 42,
         ));
@@ -59,7 +59,7 @@ final class DescriptorCommandTest extends TestCase
     {
         $received = null;
         $command = new DescriptorCommand(new CommandDescriptor(
-            'demo:echo',
+            'seed:echo',
             'Captures its argument tail.',
             static function (array $arguments) use (&$received): int {
                 $received = $arguments;
@@ -181,7 +181,7 @@ final class DescriptorCommandTest extends TestCase
     private static function reading(mixed &$read, bool $secret = false): DescriptorCommand
     {
         return new DescriptorCommand(new CommandDescriptor(
-            'demo:read',
+            'seed:read',
             'Reads one line of input.',
             static function (array $arguments, CommandIo $io) use (&$read, $secret): int {
                 $read = $secret ? $io->readSecret() : $io->readLine();
@@ -200,7 +200,7 @@ final class DescriptorCommandTest extends TestCase
     public function testAHandlerThatDeclaresNoIoStillRuns(): void
     {
         $command = new DescriptorCommand(new CommandDescriptor(
-            'demo:oblivious',
+            'seed:oblivious',
             'Ignores the io entirely.',
             static fn (array $arguments): int => 7,
         ));
@@ -223,7 +223,7 @@ final class DescriptorCommandTest extends TestCase
         $received = null;
         $status = self::runArgv(
             self::capturing($received),
-            ['bin/console', 'demo:echo', 'a@b.c', 'Ada', '--password=x', '--tier=admin'],
+            ['bin/console', 'seed:echo', 'a@b.c', 'Ada', '--password=x', '--tier=admin'],
         );
 
         self::assertSame(0, $status);
@@ -240,7 +240,7 @@ final class DescriptorCommandTest extends TestCase
         $received = null;
         $status = self::runArgv(
             self::capturing($received),
-            ['bin/console', 'demo:echo', '--fresh', 'alpha', '--count=10', '-v', 'beta'],
+            ['bin/console', 'seed:echo', '--fresh', 'alpha', '--count=10', '-v', 'beta'],
         );
 
         self::assertSame(0, $status);
@@ -257,7 +257,7 @@ final class DescriptorCommandTest extends TestCase
         $received = null;
         $status = self::runArgv(
             self::capturing($received),
-            ['bin/console', '--no-ansi', 'demo:echo', 'alpha'],
+            ['bin/console', '--no-ansi', 'seed:echo', 'alpha'],
         );
 
         self::assertSame(0, $status);
@@ -274,7 +274,7 @@ final class DescriptorCommandTest extends TestCase
     {
         $received = null;
         $output = new BufferedOutput();
-        $status = self::runArgv(self::capturing($received), ['bin/console', 'demo:echo', '--help'], $output);
+        $status = self::runArgv(self::capturing($received), ['bin/console', 'seed:echo', '--help'], $output);
 
         self::assertSame(0, $status);
         self::assertStringContainsString('Captures its argument tail.', $output->fetch());
@@ -299,7 +299,7 @@ final class DescriptorCommandTest extends TestCase
     private static function capturing(mixed &$received): DescriptorCommand
     {
         return new DescriptorCommand(new CommandDescriptor(
-            'demo:echo',
+            'seed:echo',
             'Captures its argument tail.',
             static function (array $arguments) use (&$received): int {
                 $received = $arguments;
@@ -329,7 +329,7 @@ final class DescriptorCommandTest extends TestCase
     private static function speaking(): DescriptorCommand
     {
         return new DescriptorCommand(new CommandDescriptor(
-            'demo:say',
+            'seed:say',
             'Says one thing on each stream.',
             static function (array $arguments, CommandIo $io): int {
                 $io->write('made the thing');

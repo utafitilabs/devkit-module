@@ -20,13 +20,13 @@ use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
 
 /**
  * ASSEMBLES THE COMMAND LIST the console's Commands surface reads — the same
- * collection slice 1's `fixtures:demo` and command loader are built from, seen
+ * collection slice 1's `fixtures:seed` and command loader are built from, seen
  * from the side rather than run.
  *
  * It reads devkit's two tags — every tagged {@see ContentProviderInterface}
  * and {@see CommandProviderInterface} — and groups each contribution under the
  * module that shipped it, resolved from the provider's own package. devkit's own
- * `fixtures:demo` leads the list: devkit is itself a module that contributes one
+ * `fixtures:seed` leads the list: devkit is itself a module that contributes one
  * command, and it is the one a builder reaches for first.
  *
  * It RUNS nothing. This is the inspector half of the console — it discovers what
@@ -38,7 +38,7 @@ final class CommandInventory
     private const string DEVKIT_PACKAGE = 'uhifadhi/devkit-module';
 
     /**
-     * @param iterable<ContentProviderInterface> $contentProviders every tagged demo-content provider
+     * @param iterable<ContentProviderInterface> $contentProviders every tagged seed-content provider
      * @param iterable<CommandProviderInterface> $commandProviders every tagged command provider
      */
     public function __construct(
@@ -59,13 +59,13 @@ final class CommandInventory
          */
         $groups = [];
 
-        // devkit first — its own fixtures:demo, the hero of the home surface.
+        // devkit first — its own fixtures:seed, the hero of the home surface.
         $groups['devkit'] = [
             'package' => $this->packages->package(self::DEVKIT_PACKAGE),
             'commands' => [new AssembledCommand(
                 CommandCatalogue::HERO_COMMAND,
-                CommandKind::DemoContent,
-                'Load the full cross-module demo dataset — every installed module’s demo content, resolved and run in dependency order. The one command that stands a fresh park up.',
+                CommandKind::SeedContent,
+                'Load the full cross-module seed dataset — every installed module’s seed content, resolved and run in dependency order. The one command that stands a fresh park up.',
             )],
         ];
 
@@ -73,7 +73,7 @@ final class CommandInventory
             $this->add(
                 $groups,
                 $provider,
-                new AssembledCommand($provider->key(), CommandKind::DemoContent, $provider->description()),
+                new AssembledCommand($provider->key(), CommandKind::SeedContent, $provider->description()),
             );
         }
 

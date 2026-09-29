@@ -52,7 +52,7 @@
 .dk-run svg{width:12px;height:12px}
 .dk-run .cli{color:var(--dim)}
 
-/* the loud primary command — fixtures:demo, the one line that stands a park up */
+/* the loud primary command — fixtures:seed, the one line that stands a park up */
 .dk-hero{display:flex;align-items:center;gap:16px;border:1px solid color-mix(in srgb,var(--acc) 45%,transparent);
   border-radius:13px;background:color-mix(in srgb,var(--acc) 7%,transparent);padding:15px 17px;margin-bottom:14px}
 .dk-hero .ic{width:40px;height:40px;border-radius:11px;flex:none;display:grid;place-items:center;

@@ -6,7 +6,7 @@
 {% block title %}Commands{% endblock %}
 {% block shell_page_title %}Commands{% endblock %}
 {% block shell_page_subtitle %}
-    The assembled dev commands and demo-content loaders the fleet contributes.
+    The assembled dev commands and seed-content loaders the fleet contributes.
     Every module ships <b>inert provider classes</b> that declare its commands
     through the contracts (<code class="mono">Devkit\CommandProviderInterface</code>,
     <code class="mono">Devkit\ContentProviderInterface</code>); devkit collects
@@ -18,7 +18,7 @@
 {% block devkit_content %}
     <div class="grid g4" style="margin-bottom:26px">
         <div class="c"><span class="tab">assembled</span><div class="kpi"><b>{{ catalogue.total }}</b><div class="sub">commands &middot; from {{ catalogue.contributorCount }} modules</div></div></div>
-        <div class="c"><span class="tab">demo content</span><div class="kpi"><b>{{ catalogue.demoContentCount }}</b><div class="sub">seed:demo loaders</div></div></div>
+        <div class="c"><span class="tab">seed content</span><div class="kpi"><b>{{ catalogue.seedContentCount }}</b><div class="sub">seed:seed loaders</div></div></div>
         <div class="c"><span class="tab">deprecated</span><div class="kpi"><b>{{ catalogue.deprecatedCount }}</b><div class="sub">dying commands</div></div></div>
         <div class="c"><span class="tab">contributors</span><div class="kpi"><b>{{ catalogue.contributorCount }}</b><div class="sub">modules ship commands</div></div></div>
     </div>
