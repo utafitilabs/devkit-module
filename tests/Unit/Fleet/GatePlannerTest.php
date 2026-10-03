@@ -82,12 +82,12 @@ final class GatePlannerTest extends TestCase
         $lines = $plan->describe();
 
         self::assertSame(GateStepKind::ValidateStarter, $plan->steps[0]->kind, 'head mode validates the starter before creating anything from it');
-        self::assertSame('/work/skeleton', $plan->steps[0]->subject);
+        self::assertSame('/work/uhifadhi-skeleton', $plan->steps[0]->subject);
         self::assertSame(['composer', 'validate', '--strict', '--no-check-publish'], $plan->steps[0]->command);
         self::assertSame(GateStepKind::ReadmeListsModules, $plan->steps[1]->kind, 'head mode has the starter on disk, so it checks the list first');
 
         self::assertStringContainsString('--stability=dev', $lines[2]);
-        self::assertStringContainsString('--repository={"type":"vcs","url":"\/work\/skeleton"}', $lines[2]);
+        self::assertStringContainsString('--repository={"type":"vcs","url":"\/work\/uhifadhi-skeleton"}', $lines[2]);
 
         self::assertContains('composer config repositories.uhifadhi-uhifadhi vcs /work/uhifadhi', $this->commands($plan));
         self::assertContains('composer require uhifadhi/uhifadhi:0.4.x-dev --no-interaction --no-progress', $this->commands($plan));

@@ -48,7 +48,7 @@ final readonly class GateRequest
     /** The starter's own checkout, which head mode creates the project from. */
     public function skeletonCheckout(): string
     {
-        return rtrim($this->workspace, '/').'/skeleton';
+        return rtrim($this->workspace, '/').'/uhifadhi-skeleton';
     }
 
     /** The core's checkout, which head mode requires over the created project's own. */

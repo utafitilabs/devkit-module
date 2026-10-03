@@ -182,8 +182,8 @@ jobs:
       - name: Check out the starter
         uses: actions/checkout@v4
         with:
-          repository: utafitilabs/skeleton
-          path: fleet/skeleton
+          repository: utafitilabs/uhifadhi-skeleton
+          path: fleet/uhifadhi-skeleton
 
       - name: Check out the core
         uses: actions/checkout@v4
