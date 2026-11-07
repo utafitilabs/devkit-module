@@ -21,7 +21,6 @@ use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Devkit\Console\Command\CommandInventory;
 use Uhifadhi\Devkit\Console\Doctor\Conformance;
 use Uhifadhi\Devkit\Console\Module\ModuleRegistry;
-use Uhifadhi\Devkit\Console\Table\TablePager;
 use Uhifadhi\Devkit\Console\Wiring\ContributionPointInspector;
 
 /**
@@ -44,13 +43,17 @@ use Uhifadhi\Devkit\Console\Wiring\ContributionPointInspector;
  */
 final class ConsoleController
 {
+    /** The per-area matrix's own pair of foot keys, beside the registry's. */
+    private const string MATRIX_PAGE = 'mpage';
+
+    private const string MATRIX_PER = 'mper';
+
     public function __construct(
         private readonly Environment $twig,
         private readonly CommandInventory $commands,
         private readonly ModuleRegistry $modules,
         private readonly Conformance $conformance,
         private readonly ContributionPointInspector $points,
-        private readonly TablePager $pager,
         private readonly TablePageService $pages,
         private readonly bool $debug,
     ) {
@@ -92,24 +95,33 @@ final class ConsoleController
     }
 
     /**
-     * Two tables, each with its own bar and foot: the registry reads `core`,
-     * `q`, `size`, `page`; the per-area matrix the same keys under an `m`.
+     * Two tables, each with its own bar and the Shell's foot: the registry
+     * reads `core`, `q`, `page`, `per`; the per-area matrix `reach` and the
+     * same keys under an `m`.
      */
     public function modules(Request $request): Response
     {
         $this->assertAvailable();
         $registry = $this->modules->view();
         $matrix = $this->modules->areaMatrix();
-        $filter = self::filter($request, ['core', 'q', 'size']);
-        $matrixFilter = self::filter($request, ['reach', 'mq', 'msize']);
+        $filter = self::filter($request, ['core', 'q', TablePageService::PER]);
+        $matrixFilter = self::filter($request, ['reach', 'mq', self::MATRIX_PER]);
+        $listed = $this->modules->listed($registry, $filter['core'] ?? null, $filter['q'] ?? null);
+        $table = $this->pages->read($request, \count($listed));
+        $matrixListed = null === $matrix ? [] : $matrix->listed($matrixFilter['reach'] ?? null, $matrixFilter['mq'] ?? null);
+        $matrixTable = $this->pages->read($request, \count($matrixListed), self::MATRIX_PAGE, self::MATRIX_PER);
 
         return $this->render('@UhifadhiDevkit/console/modules.html.twig', [
             'registry' => $registry,
-            'table' => $this->pager->page($this->modules->listed($registry, $filter['core'] ?? null, $filter['q'] ?? null), $filter['size'] ?? null, self::value($request, 'page')),
+            'rows' => $table->slice($listed),
+            'table' => $table,
+            'links' => $this->pages->links($request, $table),
             'filter' => $filter,
             'coreCounts' => $this->modules->coreCounts($registry),
             'matrix' => $matrix,
-            'matrixTable' => null === $matrix ? null : $this->pager->page($matrix->listed($matrixFilter['reach'] ?? null, $matrixFilter['mq'] ?? null), $matrixFilter['msize'] ?? null, self::value($request, 'mpage')),
+            'matrixRows' => $matrixTable->slice($matrixListed),
+            'matrixTable' => $matrixTable,
+            'matrixLinks' => $this->pages->links($request, $matrixTable, self::MATRIX_PAGE, self::MATRIX_PER),
             'matrixFilter' => $matrixFilter,
         ]);
     }

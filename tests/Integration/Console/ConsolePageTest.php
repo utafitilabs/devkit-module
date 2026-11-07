@@ -150,6 +150,47 @@ final class ConsolePageTest extends TestCase
         self::assertSame(['permissions', 'routes'], $card->filter('th.num')->each(static fn (Crawler $th): string => trim($th->text())));
     }
 
+    public function testTheRegistryEndsInTheShellFootPagedByPageAndPer(): void
+    {
+        $crawler = $this->get('/_devkit/modules?core=na');
+
+        $card = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('table.tbl .dk-ver')->count() > 0)->first();
+        $foot = $card->filter('.c > .rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertStringStartsWith('1 package · 20 per page', trim(preg_replace('/\s+/u', ' ', $foot->filter('span')->first()->text()) ?? ''));
+        self::assertSame('20', trim($foot->filter('.rdf-size a[aria-current="true"]')->text()), 'the Shell foot marks the size in use');
+        self::assertSame(['20', '50', '100', 'all'], $foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): string => self::queryOf($a)['per'] ?? ''));
+        foreach ($foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): array => self::queryOf($a)) as $query) {
+            self::assertSame('na', $query['core'] ?? null, 'a new size keeps the filter');
+            self::assertArrayNotHasKey('size', $query);
+        }
+
+        $all = $this->get('/_devkit/modules?per=all&size=20');
+        self::assertStringContainsString('all on one page', $all->filter('.rdf-foot')->first()->text());
+        self::assertCount(1, $all->filter('.lfilt input[type=hidden][name=per][value=all]'), 'a search keeps the size');
+        self::assertCount(0, $all->filter('.lfilt input[name=size]'));
+    }
+
+    public function testTheMatrixEndsInTheShellFootOnItsOwnPairOfKeys(): void
+    {
+        $crawler = $this->get('/_devkit/modules?per=50&reach=per', ConsoleTestKernel::WITH_AREAS);
+
+        $card = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('table.dk-areas')->count() > 0)->first();
+        $foot = $card->filter('.c > .rdf-foot');
+        self::assertCount(1, $foot);
+        self::assertStringStartsWith('1 module · 20 per page', trim(preg_replace('/\s+/u', ' ', $foot->filter('span')->first()->text()) ?? ''));
+        foreach ($foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): array => self::queryOf($a)) as $query) {
+            self::assertArrayHasKey('mper', $query);
+            self::assertSame('50', $query['per'] ?? null, 'the matrix size keeps the registry\'s');
+            self::assertSame('per', $query['reach'] ?? null);
+        }
+
+        $all = $this->get('/_devkit/modules?mper=all', ConsoleTestKernel::WITH_AREAS);
+        $feet = $all->filter('.rdf-foot');
+        self::assertStringContainsString('20 per page', $feet->eq(0)->text(), 'the registry keeps its own size');
+        self::assertStringContainsString('all on one page', $feet->eq(1)->text());
+    }
+
     public function testTheCoreChipNarrowsTheRegistry(): void
     {
         $crawler = $this->get('/_devkit/modules?core=na');
@@ -219,6 +260,23 @@ final class ConsolePageTest extends TestCase
         $response = $this->handle('/_devkit', debug: false);
 
         self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function queryOf(Crawler $link): array
+    {
+        parse_str((string) parse_url((string) $link->attr('href'), \PHP_URL_QUERY), $query);
+
+        $strings = [];
+        foreach ($query as $key => $value) {
+            if (\is_string($key) && \is_string($value)) {
+                $strings[$key] = $value;
+            }
+        }
+
+        return $strings;
     }
 
     private function get(string $path, string $environment = 'test'): Crawler

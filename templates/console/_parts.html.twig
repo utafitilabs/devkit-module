@@ -91,9 +91,10 @@
     </table>
 {% endmacro %}
 
-{# THE HOUSE BAR AND FOOT — the shell's `.lfilt` and `.rdf-foot`, every
-   choice a link or one GET form. `query` is the page's whole query, so a
-   choice in one table's bar or foot keeps the other table's. #}
+{# THE HOUSE BAR — the shell's `.lfilt`, every choice a link or one GET
+   form; the foot under a table is `@Shell/_foot.html.twig`. `query` is the
+   page's whole query, so a choice in one table's bar keeps the other
+   table's. #}
 
 {# options: list of {label, count, query, on}; route: the page the options re-query #}
 {% macro chip(head, aria, options, route = 'devkit_console_modules') %}
@@ -118,21 +119,6 @@
         {{ chips|raw }}
         <div class="lsearch">{{ ux_icon('shell:search', {width: 14, height: 14, 'aria-hidden': 'true'}) }}<input class="fld" type="search" name="{{ qKey }}" value="{{ query[qKey] ?? '' }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" autocomplete="off"></div>
     </form>
-{% endmacro %}
-
-{% macro foot(table, query, sizeKey, pageKey, noun, nouns) %}
-    {%- set kept = query|filter((v, k) => k != sizeKey and k != pageKey) -%}
-    <div class="rdf-foot">
-        <span>{{ table.total }} {{ table.total == 1 ? noun : nouns }} &middot; <details class="i-dd rdf-size"><summary><span class="pg">{{ table.size == 'all' ? 'All' : table.size }}</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">
-            {%- for size in constant('Uhifadhi\\Devkit\\Console\\Table\\TablePager::SIZES') -%}
-                <a class="i-ddopt{{ size == table.size ? ' on' }}" href="{{ path('devkit_console_modules', kept|merge({(sizeKey): size})) }}"><span class="i-ddopt-l">{{ size == 'all' ? 'All' : size }}</span></a>
-            {%- endfor -%}
-        </div></details></span>
-        <span class="rdf-page">page <span class="pg">{{ table.page }}</span> of {{ table.pages }}
-            {%- if table.hasPrevious() %}<a href="{{ path('devkit_console_modules', query|merge({(pageKey): table.page - 1})) }}" aria-label="Previous page">&lsaquo;</a>{% endif -%}
-            {%- if table.hasNext() %}<a href="{{ path('devkit_console_modules', query|merge({(pageKey): table.page + 1})) }}" aria-label="Next page">&rsaquo;</a>{% endif -%}
-        </span>
-    </div>
 {% endmacro %}
 
 {# One conformance-matrix cell — one colour, one meaning, never decorative. #}

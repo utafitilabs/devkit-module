@@ -21,7 +21,6 @@ use Uhifadhi\Devkit\Console\Doctor\Conformance;
 use Uhifadhi\Devkit\Console\Module\ModuleRegistry;
 use Uhifadhi\Devkit\Console\Package\ComposerPackageIntrospector;
 use Uhifadhi\Devkit\Console\Package\PackageIntrospector;
-use Uhifadhi\Devkit\Console\Table\TablePager;
 use Uhifadhi\Devkit\Console\Wiring\ContributionPointInspector;
 use Uhifadhi\Devkit\UhifadhiDevkitBundle;
 
@@ -67,8 +66,6 @@ return static function (ContainerConfigurator $container): void {
             service('devkit.console.area_states')->nullOnInvalid(),
         ]);
 
-    $services->set('devkit.console.pager', TablePager::class);
-
     // Doctor surface — the compatibility matrix + findings.
     $services->set('devkit.console.conformance', Conformance::class)
         ->args([
@@ -93,7 +90,6 @@ return static function (ContainerConfigurator $container): void {
             service('devkit.console.module_registry'),
             service('devkit.console.conformance'),
             service('devkit.console.contribution_points'),
-            service('devkit.console.pager'),
             service('shell.table_page'),
             param('kernel.debug'),
         ])

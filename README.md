@@ -160,8 +160,8 @@ and has four surfaces, reached under `/_devkit`:
   declared permissions and stamped routes, and where it is switched on; then the
   per-area state, one row per module and one column per area, read off the
   registry's ledger. Both tables sit under the house filter bar and over the
-  house foot, narrowed and paged by query (`?core=&q=&size=&page=` for the
-  registry, `?reach=&mq=&msize=&mpage=` for the per-area state).
+  Shell's register foot, narrowed and paged by query (`?core=&q=&per=&page=`
+  for the registry, `?reach=&mq=&mper=&mpage=` for the per-area state).
 - **Doctor** — the compatibility matrix and the findings that turn it into
   pass / warn / fail. Devkit computes the checks it can read (pins the core, no
   `dev-main` marker, routes stamped) and **flags the rest as deferred** rather

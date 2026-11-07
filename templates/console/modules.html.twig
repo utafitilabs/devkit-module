@@ -24,8 +24,11 @@
     <h2 class="zone">The registry</h2>
     <div class="c" style="padding:16px 16px 6px">
         {{ parts.bar(query, parts.chip('on core', 'Filter by core', coreOptions), 'q', 'page', 'Find a module') }}
-        {{ parts.registry_table(table.rows, matrix) }}
-        {{ parts.foot(table, query, 'size', 'page', 'package', 'packages') }}
+        {{ parts.registry_table(rows, matrix) }}
+        {{ include('@Shell/_foot.html.twig', {
+            count: table.total, noun: 'packages', one: 'package',
+            perPage: table.size, page: table.page, pages: table.pages, links: links,
+        }, with_context: false) }}
     </div>
 
     <h2 class="zone">Per-area module state</h2>
@@ -42,7 +45,7 @@
             <table class="tbl dk-areas">
                 <thead><tr><th>module</th>{% for name in matrix.areas %}<th class="dk-c">{{ name }}</th>{% endfor %}</tr></thead>
                 <tbody>
-                {% for row in matrixTable.rows %}
+                {% for row in matrixRows %}
                     <tr>
                         <td><b>{{ row.label }}</b><div class="dk-pkg">{{ row.version }} &middot; {{ row.perArea ? 'per area · on in ' ~ row.onCount ~ ' of ' ~ matrix.areas|length ~ (matrix.areas|length == 1 ? ' area' : ' areas') : 'every area' }}</div></td>
                         {% for uuid, name in matrix.areas %}
@@ -54,7 +57,10 @@
                 {% endfor %}
                 </tbody>
             </table>
-            {{ parts.foot(matrixTable, query, 'msize', 'mpage', 'module', 'modules') }}
+            {{ include('@Shell/_foot.html.twig', {
+                count: matrixTable.total, noun: 'modules', one: 'module',
+                perPage: matrixTable.size, page: matrixTable.page, pages: matrixTable.pages, links: matrixLinks,
+            }, with_context: false) }}
         </div>
     {% else %}
         <p class="pgsub">This installation has no per-area ledger to read &mdash; the registry and a database keep one &mdash; so where each module is switched on is not drawn here.</p>
