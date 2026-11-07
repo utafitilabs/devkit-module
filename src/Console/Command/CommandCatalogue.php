@@ -102,6 +102,66 @@ final readonly class CommandCatalogue
     }
 
     /**
+     * THE COMMANDS REGISTER a reader narrowed to: one contributing module (its
+     * group label), one kind, and a name or description that contains what
+     * they typed — every command one row, in contribution order.
+     *
+     * @return list<ListedCommand>
+     */
+    public function listed(?string $module, ?string $kind, ?string $query): array
+    {
+        $query = trim((string) $query);
+        $rows = [];
+        foreach ($this->groups as $group) {
+            if (null !== $module && $module !== $group->label) {
+                continue;
+            }
+            foreach ($group->commands as $command) {
+                if ((null === $kind || $kind === $command->kind->value)
+                    && ('' === $query || false !== mb_stripos($command->name.' '.$command->description, $query))) {
+                    $rows[] = new ListedCommand($command, $group);
+                }
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * How many commands each contributing module ships — the module chip's
+     * counts, over the whole catalogue. A module that ships none is no option.
+     *
+     * @return array<string, int>
+     */
+    public function moduleCounts(): array
+    {
+        $counts = [];
+        foreach ($this->groups as $group) {
+            if ($group->count() > 0) {
+                $counts[$group->label] = $group->count();
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * How many commands are of each kind — the kind chip's counts, over the
+     * whole catalogue, in the order the kinds are declared.
+     *
+     * @return array<string, int>
+     */
+    public function kindCounts(): array
+    {
+        $counts = [];
+        foreach (CommandKind::cases() as $kind) {
+            $counts[$kind->value] = \count($this->commandsWhere(static fn (AssembledCommand $c): bool => $kind === $c->kind));
+        }
+
+        return $counts;
+    }
+
+    /**
      * @param callable(AssembledCommand): bool $predicate
      *
      * @return list<AssembledCommand>

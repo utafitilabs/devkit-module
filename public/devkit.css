@@ -46,6 +46,17 @@
 .dk-cmd .ds{font-size:12.5px;color:var(--fog);margin-top:5px;line-height:1.5}
 .dk-cmd.dep{opacity:.72}
 .dk-cmd.dep .nm{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--warn) 70%,transparent)}
+/* THE COMMANDS REGISTER — one command on one row of the house table: its name,
+   the contributing module's hue dot on the sub-line, what it does, the kind as
+   a small pill, and a deprecated command struck through. */
+table.tbl .dk-cmdname{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;font-weight:700;color:var(--tx)}
+table.tbl .sub .dot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px}
+table.tbl td.dk-ds{font-size:12.5px;color:var(--fog);line-height:1.5}
+.dk-kind{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:8px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--fog);border:1px solid var(--ln2);border-radius:5px;padding:2px 6px;white-space:nowrap}
+.dk-kind.content{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
+table.tbl tr.dk-dep td{opacity:.72}
+table.tbl tr.dk-dep .dk-cmdname{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--warn) 70%,transparent)}
 .dk-run{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",ui-monospace,monospace;
   font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--fog);border:1px solid var(--ln2);
   border-radius:8px;padding:6px 11px;flex:none;background:none;cursor:not-allowed}

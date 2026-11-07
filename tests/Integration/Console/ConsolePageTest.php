@@ -66,11 +66,66 @@ final class ConsolePageTest extends TestCase
     {
         $crawler = $this->get('/_devkit/commands');
 
-        self::assertGreaterThan(0, $crawler->filter('.dk-grp')->count(), 'Commands are grouped by contributing module.');
         $text = $crawler->filter('div.pgbody')->text();
         self::assertStringContainsString('fixtures:seed', $text);
         self::assertStringContainsString('devkit:test:echo', $text, 'A tagged command provider becomes a listed command.');
         self::assertStringContainsString('deprecat', $text, 'The deprecation gap is flagged on the surface.');
+    }
+
+    /**
+     * ONE REGISTER, NO GROUP HEADERS: the contributing module is a chip in the
+     * house bar and the `.sub` line under each command's name.
+     */
+    public function testTheCommandsAreOneHouseTableUnderTheHouseBar(): void
+    {
+        $crawler = $this->get('/_devkit/commands');
+
+        self::assertCount(0, $crawler->filter('.dk-grp, .dk-cmd'), 'no group header and no card row is left');
+        $card = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('table.tbl')->count() > 0);
+        self::assertCount(1, $card);
+        self::assertCount(2, $card->filter('form.lfilt[method=get] > details.i-dd > summary.mchip.i-ddt'));
+        self::assertSame(['module', 'kind'], $card->filter('form.lfilt .i-ddhead')->each(static fn (Crawler $h): string => trim($h->text())));
+        self::assertCount(1, $card->filter('form.lfilt .lsearch input.fld[name=q]'));
+
+        $rows = $card->filter('table.tbl tbody tr');
+        self::assertGreaterThanOrEqual(2, $rows->count());
+        $rows->each(static function (Crawler $row): void {
+            self::assertCount(1, $row->filter('td')->first()->filter('.sub'), 'the module is the row\'s sub-line');
+            self::assertCount(1, $row->filter('td.door .dk-run[disabled]'));
+        });
+        self::assertSame(
+            'every module · '.$rows->count(),
+            trim($card->filter('form.lfilt details.i-dd')->first()->filter('summary .i-ddval')->text()),
+        );
+    }
+
+    public function testTheCommandsRegisterEndsInTheShellFoot(): void
+    {
+        $crawler = $this->get('/_devkit/commands?kind=command');
+
+        $foot = $crawler->filter('.c > .rdf-foot');
+        self::assertCount(1, $foot);
+        $count = $crawler->filter('table.tbl tbody tr')->count();
+        self::assertStringStartsWith($count.' command'.(1 === $count ? '' : 's').' · 20 per page', trim($foot->filter('span')->first()->text()));
+        self::assertSame('page 1 of 1', trim($foot->filter('.rdf-page')->text()));
+        foreach ($foot->filter('details.rdf-size a.i-ddopt')->each(static fn (Crawler $a): string => (string) $a->attr('href')) as $href) {
+            self::assertStringStartsWith('/_devkit/commands?', $href);
+            self::assertStringContainsString('kind=command', $href, 'a new size keeps the filter');
+        }
+
+        self::assertStringContainsString('all on one page', $this->get('/_devkit/commands?per=all')->filter('.rdf-foot')->text());
+    }
+
+    public function testTheKindChipAndTheSearchNarrowTheCommands(): void
+    {
+        $commands = $this->get('/_devkit/commands?kind=command')->filter('table.tbl tbody')->text();
+
+        self::assertStringContainsString('devkit:test:echo', $commands);
+        self::assertStringNotContainsString('fixtures:seed', $commands, 'fixtures:seed is seed content, not a command');
+
+        $searched = $this->get('/_devkit/commands?q=echo')->filter('table.tbl tbody tr');
+        self::assertCount(1, $searched);
+        self::assertStringContainsString('devkit:test:echo', $searched->text());
     }
 
     public function testTheModulesSurfaceCarriesNoStripAndSaysWhyThereIsNoPerAreaMatrix(): void

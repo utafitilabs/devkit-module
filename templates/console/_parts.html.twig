@@ -28,11 +28,25 @@
     </div>
 {% endmacro %}
 
-{# One contributing module's group of commands: the header, then its rows. #}
+{# One contributing module's group of commands: the header, then its rows —
+   the home surface's reading. The Commands surface is the register below. #}
 {% macro group(grp) %}
     {% import _self as parts %}
     <div class="dk-grp">{{ parts.dot(grp.label) }}<span class="gn">{{ grp.label }}</span><span class="pkg">{{ grp.package ? grp.package.name ~ ' · ' ~ grp.package.version : 'app-level' }}</span><span class="cnt">{{ grp.count }}</span><span class="ln"></span></div>
     {% for cmd in grp.commands %}{{ parts.command(cmd) }}{% endfor %}
+{% endmacro %}
+
+{# ONE ROW OF THE COMMANDS REGISTER: the name with the contributing module on
+   its sub-line, what it does, its kind, and the inert Run at the door. #}
+{% macro command_row(row) %}
+    {% import _self as parts %}
+    {%- set cmd = row.command -%}
+    <tr{{ cmd.deprecated ? ' class="dk-dep"'|raw }}>
+        <td><span class="dk-cmdname">{{ cmd.name }}</span><span class="sub">{{ parts.dot(row.group.label) }}{{ row.group.label }} &middot; {{ row.group.package ? row.group.package.name ~ ' · ' ~ row.group.package.version : 'app-level' }}</span></td>
+        <td class="dk-ds">{{ cmd.description }}</td>
+        <td><span class="dk-kind{{ cmd.kind.value == 'seed-content' ? ' content' }}">{{ cmd.kind.value }}</span></td>
+        <td class="door">{{ parts.run() }}</td>
+    </tr>
 {% endmacro %}
 
 {# The module registry table — the fleet as one register. Shared by the home
@@ -81,8 +95,8 @@
    choice a link or one GET form. `query` is the page's whole query, so a
    choice in one table's bar or foot keeps the other table's. #}
 
-{# options: list of {label, count, query, on} #}
-{% macro chip(head, aria, options) %}
+{# options: list of {label, count, query, on}; route: the page the options re-query #}
+{% macro chip(head, aria, options, route = 'devkit_console_modules') %}
     {%- set picked = options|filter(o => o.on)|first|default(options|first) -%}
     <details class="i-dd">
         <summary class="mchip i-ddt{{ picked != options|first ? ' on' }}"><span class="i-ddval">{{ picked.label }} &middot; {{ picked.count }}</span><span class="i-ddcaret">&#9662;</span></summary>
@@ -90,14 +104,14 @@
             <span class="i-ddhead">{{ head }}</span>
             {%- for option in options -%}
                 {%- if loop.index == 2 %}<span class="i-ddsep"></span>{% endif -%}
-                <a class="i-ddopt{{ option.on ? ' on' }}" href="{{ path('devkit_console_modules', option.query) }}"><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
+                <a class="i-ddopt{{ option.on ? ' on' }}" href="{{ path(route, option.query) }}"><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
             {%- endfor -%}
         </div>
     </details>
 {% endmacro %}
 
-{% macro bar(query, chips, qKey, pageKey, placeholder) %}
-    <form class="lfilt" method="get" action="{{ path('devkit_console_modules') }}">
+{% macro bar(query, chips, qKey, pageKey, placeholder, route = 'devkit_console_modules') %}
+    <form class="lfilt" method="get" action="{{ path(route) }}">
         {%- for name, value in query|filter((v, k) => k != qKey and k != pageKey) -%}
             <input type="hidden" name="{{ name }}" value="{{ value }}">
         {%- endfor -%}

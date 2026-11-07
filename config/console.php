@@ -94,6 +94,7 @@ return static function (ContainerConfigurator $container): void {
             service('devkit.console.conformance'),
             service('devkit.console.contribution_points'),
             service('devkit.console.pager'),
+            service('shell.table_page'),
             param('kernel.debug'),
         ])
         ->public();

@@ -23,9 +23,36 @@
         <div class="c"><span class="tab">contributors</span><div class="kpi"><b>{{ catalogue.contributorCount }}</b><div class="sub">modules ship commands</div></div></div>
     </div>
 
-    <h2 class="zone">The assembled command list &mdash; grouped by contributing module</h2>
-
-    {% for group in catalogue.groups %}{{ parts.group(group) }}{% endfor %}
+    {# ONE REGISTER: the contributing module is a chip in the bar and the
+       sub-line under each name, never a group header. The chips count the
+       whole catalogue; every option is a link and the search one GET. #}
+    {%- set here = 'devkit_console_commands' -%}
+    {%- set kept = filter|filter((v, k) => k != 'module') -%}
+    {%- set moduleOptions = [{label: 'every module', count: catalogue.total, query: kept, on: filter.module is not defined}] -%}
+    {%- for label, count in moduleCounts -%}
+        {%- set moduleOptions = moduleOptions|merge([{label: label, count: count, query: kept|merge({module: label}), on: (filter.module ?? null) == label}]) -%}
+    {%- endfor -%}
+    {%- set kept = filter|filter((v, k) => k != 'kind') -%}
+    {%- set kindOptions = [{label: 'every kind', count: catalogue.total, query: kept, on: filter.kind is not defined}] -%}
+    {%- for kind, count in kindCounts -%}
+        {%- set kindOptions = kindOptions|merge([{label: kind, count: count, query: kept|merge({kind: kind}), on: (filter.kind ?? null) == kind}]) -%}
+    {%- endfor -%}
+    <div class="c">
+        <span class="tab">The assembled command list<span class="src">&middot; {{ catalogue.total }} &middot; from {{ catalogue.contributorCount }} modules</span></span>
+        {{ parts.bar(filter, parts.chip('module', 'Filter by module', moduleOptions, here) ~ parts.chip('kind', 'Filter by kind', kindOptions, here), 'q', 'page', 'A command, or what it does', here) }}
+        <table class="tbl">
+            <thead><tr><th>command</th><th>what it does</th><th>kind</th><th></th></tr></thead>
+            <tbody>
+            {% for row in rows %}{{ parts.command_row(row) }}{% else %}
+                <tr><td colspan="4"><span class="mono d">No command matches these filters.</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {{ include('@Shell/_foot.html.twig', {
+            count: table.total, noun: 'commands', one: 'command',
+            perPage: table.size, page: table.page, pages: table.pages, links: links,
+        }, with_context: false) }}
+    </div>
 
     <div class="dk-note" style="margin-top:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div class="bd"><b>Why the Run buttons are disabled.</b> v1 is an <b>inspector</b> console &mdash; commands run from the CLI, and this surface reads and assembles them so a builder can discover what the whole fleet contributes. A web command-runner and scaffolding are a later phase; the affordance is drawn here, deliberately inert.</div></div>
 

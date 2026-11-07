@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Twig\Environment;
+use Uhifadhi\Bundle\ShellBundle\Service\TablePageService;
 use Uhifadhi\Devkit\Console\Command\CommandInventory;
 use Uhifadhi\Devkit\Console\Doctor\Conformance;
 use Uhifadhi\Devkit\Console\Module\ModuleRegistry;
@@ -50,6 +51,7 @@ final class ConsoleController
         private readonly Conformance $conformance,
         private readonly ContributionPointInspector $points,
         private readonly TablePager $pager,
+        private readonly TablePageService $pages,
         private readonly bool $debug,
     ) {
     }
@@ -66,12 +68,26 @@ final class ConsoleController
         ]);
     }
 
-    public function commands(): Response
+    /**
+     * One register: the bar reads `module`, `kind` and `q`, the Shell's foot
+     * `page` and `per`.
+     */
+    public function commands(Request $request): Response
     {
         $this->assertAvailable();
+        $catalogue = $this->commands->catalogue();
+        $filter = self::filter($request, ['module', 'kind', 'q']);
+        $listed = $catalogue->listed($filter['module'] ?? null, $filter['kind'] ?? null, $filter['q'] ?? null);
+        $table = $this->pages->read($request, \count($listed));
 
         return $this->render('@UhifadhiDevkit/console/commands.html.twig', [
-            'catalogue' => $this->commands->catalogue(),
+            'catalogue' => $catalogue,
+            'filter' => $filter,
+            'rows' => $table->slice($listed),
+            'table' => $table,
+            'links' => $this->pages->links($request, $table),
+            'moduleCounts' => $catalogue->moduleCounts(),
+            'kindCounts' => $catalogue->kindCounts(),
         ]);
     }
 
