@@ -36,16 +36,18 @@
 {% endmacro %}
 
 {# The module registry table — the fleet as one register. Shared by the home
-   surface and the Modules surface so they can never disagree. #}
-{% macro registry_table(rows) %}
+   surface and the Modules surface so they can never disagree. `matrix` is
+   the per-area state where the installation keeps a ledger, or null. #}
+{% macro registry_table(rows, matrix = null) %}
     <table class="tbl">
-        <tr><th>module</th><th>version</th><th>requires contracts</th><th>on core</th><th class="num">perms</th><th class="num">routes</th><th>on in areas</th><th></th></tr>
+        <thead><tr><th>module</th><th>version</th><th>requires contracts</th><th>on core</th><th class="num">permissions</th><th class="num">routes</th><th>on in areas</th><th></th></tr></thead>
+        <tbody>
         {% for row in rows %}
             <tr>
                 <td><span class="dk-name">{{ row.package.shortName }}</span><div class="dk-pkg">{{ row.package.name }}</div></td>
                 <td><span class="dk-ver">{{ row.package.version }}</span></td>
                 <td>
-                    {%- if row.reach.name == 'TheCore' %}<span class="dk-con">&mdash; the core &mdash;</span>
+                    {%- if row.reach.name == 'TheCore' %}<span class="dk-con">is the core</span>
                     {%- elseif row.coreConstraint is null %}<span class="dk-con">&mdash;</span>
                     {%- else %}<span class="dk-con{{ row.coreState.name == 'BehindCore' ? ' w' }}">{{ row.coreConstraint }}</span>
                     {%- endif %}
@@ -59,15 +61,64 @@
                 <td class="num">{{ row.grants }}</td>
                 <td class="num">{{ row.routes }}</td>
                 <td>
+                    {%- set on = matrix ? matrix.onCount(row.slug) : null -%}
                     {%- if row.reach.name == 'TheCore' %}<span class="dk-on zero"><i></i>the core</span>
-                    {%- elseif row.reach.name == 'HostWide' %}<span class="dk-on"><i></i>host-wide</span>
-                    {%- else %}<span class="dk-on zero" title="Exact per-area count is deferred — needs the registry's per-area ledger and the host's area list"><i></i>per-area</span>
+                    {%- elseif row.reach.name == 'HostWide' %}<span class="dk-on"><i></i>every area</span>
+                    {%- elseif on is not null %}<span class="dk-on{{ on == 0 ? ' zero' }}"><i></i>on in {{ on }} / {{ matrix.areas|length }}</span>
+                    {%- else %}<span class="dk-on zero"><i></i>per area</span>
                     {%- endif %}
                 </td>
                 <td><a class="open-btn" href="{{ path('devkit_console_modules') }}">Open</a></td>
             </tr>
+        {% else %}
+            <tr><td colspan="8"><span class="mono d">No module matches these filters.</span></td></tr>
         {% endfor %}
+        </tbody>
     </table>
+{% endmacro %}
+
+{# THE HOUSE BAR AND FOOT — the shell's `.lfilt` and `.rdf-foot`, every
+   choice a link or one GET form. `query` is the page's whole query, so a
+   choice in one table's bar or foot keeps the other table's. #}
+
+{# options: list of {label, count, query, on} #}
+{% macro chip(head, aria, options) %}
+    {%- set picked = options|filter(o => o.on)|first|default(options|first) -%}
+    <details class="i-dd">
+        <summary class="mchip i-ddt{{ picked != options|first ? ' on' }}"><span class="i-ddval">{{ picked.label }} &middot; {{ picked.count }}</span><span class="i-ddcaret">&#9662;</span></summary>
+        <div class="i-ddmenu" aria-label="{{ aria }}">
+            <span class="i-ddhead">{{ head }}</span>
+            {%- for option in options -%}
+                {%- if loop.index == 2 %}<span class="i-ddsep"></span>{% endif -%}
+                <a class="i-ddopt{{ option.on ? ' on' }}" href="{{ path('devkit_console_modules', option.query) }}"><span class="i-ddopt-l">{{ option.label }}</span><span class="i-ddopt-n">{{ option.count }}</span></a>
+            {%- endfor -%}
+        </div>
+    </details>
+{% endmacro %}
+
+{% macro bar(query, chips, qKey, pageKey, placeholder) %}
+    <form class="lfilt" method="get" action="{{ path('devkit_console_modules') }}">
+        {%- for name, value in query|filter((v, k) => k != qKey and k != pageKey) -%}
+            <input type="hidden" name="{{ name }}" value="{{ value }}">
+        {%- endfor -%}
+        {{ chips|raw }}
+        <div class="lsearch">{{ ux_icon('shell:search', {width: 14, height: 14, 'aria-hidden': 'true'}) }}<input class="fld" type="search" name="{{ qKey }}" value="{{ query[qKey] ?? '' }}" placeholder="{{ placeholder }}" aria-label="{{ placeholder }}" autocomplete="off"></div>
+    </form>
+{% endmacro %}
+
+{% macro foot(table, query, sizeKey, pageKey, noun, nouns) %}
+    {%- set kept = query|filter((v, k) => k != sizeKey and k != pageKey) -%}
+    <div class="rdf-foot">
+        <span>{{ table.total }} {{ table.total == 1 ? noun : nouns }} &middot; <details class="i-dd rdf-size"><summary><span class="pg">{{ table.size == 'all' ? 'All' : table.size }}</span> per page<span class="i-ddcaret">&#9662;</span></summary><div class="i-ddmenu" aria-label="Rows per page">
+            {%- for size in constant('Uhifadhi\\Devkit\\Console\\Table\\TablePager::SIZES') -%}
+                <a class="i-ddopt{{ size == table.size ? ' on' }}" href="{{ path('devkit_console_modules', kept|merge({(sizeKey): size})) }}"><span class="i-ddopt-l">{{ size == 'all' ? 'All' : size }}</span></a>
+            {%- endfor -%}
+        </div></details></span>
+        <span class="rdf-page">page <span class="pg">{{ table.page }}</span> of {{ table.pages }}
+            {%- if table.hasPrevious() %}<a href="{{ path('devkit_console_modules', query|merge({(pageKey): table.page - 1})) }}" aria-label="Previous page">&lsaquo;</a>{% endif -%}
+            {%- if table.hasNext() %}<a href="{{ path('devkit_console_modules', query|merge({(pageKey): table.page + 1})) }}" aria-label="Next page">&rsaquo;</a>{% endif -%}
+        </span>
+    </div>
 {% endmacro %}
 
 {# One conformance-matrix cell — one colour, one meaning, never decorative. #}

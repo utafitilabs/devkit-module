@@ -73,13 +73,64 @@ final class ConsolePageTest extends TestCase
         self::assertStringContainsString('deprecat', $text, 'The deprecation gap is flagged on the surface.');
     }
 
-    public function testTheModulesSurfaceIsTheRegistryWithADeferredPerAreaNote(): void
+    public function testTheModulesSurfaceCarriesNoStripAndSaysWhyThereIsNoPerAreaMatrix(): void
     {
         $crawler = $this->get('/_devkit/modules');
 
-        self::assertCount(1, $crawler->filter('.factband'), 'The fleet facts head the page.');
+        self::assertCount(0, $crawler->filter('.factband'), 'A list page carries no strip.');
         self::assertGreaterThan(0, $crawler->filter('table.tbl .dk-ver')->count(), 'Every module row shows a version.');
-        self::assertStringContainsString('deferred', $crawler->filter('div.pgbody')->text(), 'The per-area matrix is flagged deferred, not faked.');
+        self::assertCount(1, $crawler->filter('table.tbl'), 'Without a ledger there is no per-area table.');
+        self::assertStringContainsString('no per-area ledger', $crawler->filter('div.pgbody')->text());
+    }
+
+    public function testTheRegistrySitsUnderTheHouseBarAndOverTheHouseFoot(): void
+    {
+        $crawler = $this->get('/_devkit/modules');
+
+        $card = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('table.tbl .dk-ver')->count() > 0)->first();
+        self::assertCount(1, $card->filter('form.lfilt[method=get] details.i-dd summary.mchip'));
+        self::assertCount(1, $card->filter('form.lfilt .lsearch input.fld[name=q]'));
+        self::assertStringStartsWith('2 packages', trim($card->filter('.rdf-foot')->text()));
+        self::assertSame('page 1 of 1', trim($card->filter('.rdf-foot .rdf-page')->text()));
+        self::assertSame(['permissions', 'routes'], $card->filter('th.num')->each(static fn (Crawler $th): string => trim($th->text())));
+    }
+
+    public function testTheCoreChipNarrowsTheRegistry(): void
+    {
+        $crawler = $this->get('/_devkit/modules?core=na');
+
+        self::assertSame(['uhifadhi'], $crawler->filter('table.tbl .dk-name')->each(static fn (Crawler $n): string => trim($n->text())));
+        self::assertStringContainsString('is the core', $crawler->filter('table.tbl')->text());
+    }
+
+    public function testThePerAreaMatrixIsAHouseTableReadFromTheLedger(): void
+    {
+        $crawler = $this->get('/_devkit/modules', ConsoleTestKernel::WITH_AREAS);
+
+        $matrix = $crawler->filter('table.tbl.dk-areas');
+        self::assertCount(1, $matrix);
+        self::assertSame(['module', 'North Block', 'South Block'], $matrix->filter('thead th')->each(static fn (Crawler $th): string => trim($th->text())));
+        self::assertCount(0, $matrix->filter('tr.sxgrp'), 'No band rows: the grouping is the order and the chip.');
+
+        $rows = $matrix->filter('tbody tr');
+        self::assertStringContainsString('Patrols', $rows->eq(0)->text(), 'Modules switched on per area come first.');
+        self::assertSame(['pass', 'na'], $rows->eq(0)->filter('.dk-cell')->each(static fn (Crawler $c): string => str_replace('dk-cell ', '', (string) $c->attr('class'))));
+        self::assertStringContainsString('per area', $rows->eq(0)->text());
+        self::assertStringContainsString('every area', $rows->eq(1)->text());
+
+        $card = $crawler->filter('.c')->reduce(static fn (Crawler $c): bool => $c->filter('table.dk-areas')->count() > 0)->first();
+        self::assertCount(1, $card->filter('form.lfilt'));
+        self::assertCount(1, $card->filter('.rdf-foot'));
+        self::assertStringContainsString('on in 1 of 2 areas', $crawler->filter('div.pgbody')->text());
+    }
+
+    public function testTheReachChipNarrowsTheMatrix(): void
+    {
+        $crawler = $this->get('/_devkit/modules?reach=every', ConsoleTestKernel::WITH_AREAS);
+
+        $text = $crawler->filter('table.dk-areas tbody')->text();
+        self::assertStringNotContainsString('Patrols', $text);
+        self::assertStringContainsString('Areas', $text);
     }
 
     public function testTheDoctorSurfaceComputesTheMatrixAndFlagsTheDeferredChecks(): void
@@ -115,17 +166,17 @@ final class ConsolePageTest extends TestCase
         self::assertSame(Response::HTTP_NOT_FOUND, $response->getStatusCode());
     }
 
-    private function get(string $path): Crawler
+    private function get(string $path, string $environment = 'test'): Crawler
     {
-        $response = $this->handle($path);
+        $response = $this->handle($path, true, $environment);
         self::assertSame(Response::HTTP_OK, $response->getStatusCode(), \sprintf('GET %s did not serve.', $path));
 
         return new Crawler((string) $response->getContent());
     }
 
-    private function handle(string $path, bool $debug = true): Response
+    private function handle(string $path, bool $debug = true, string $environment = 'test'): Response
     {
-        $kernel = new ConsoleTestKernel('test', $debug);
+        $kernel = new ConsoleTestKernel($environment, $debug);
         $kernel->boot();
 
         return $kernel->handle(Request::create($path), catch: true);

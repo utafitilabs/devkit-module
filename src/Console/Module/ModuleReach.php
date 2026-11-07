@@ -22,10 +22,8 @@ namespace Uhifadhi\Devkit\Console\Module;
  * base modules (a provider that answers base(): seeded active in every area).
  * `PerArea` — an installable capability module, switched on per area by an admin.
  *
- * THE EXACT PER-AREA COUNT ("on in 1 / 4") IS DEFERRED. It needs the registry's
- * per-area ledger (a database read) AND the host's list of areas to divide by,
- * neither of which the standalone console has; see {@see ModuleRegistry}. The
- * reach here is the honest DB-free classification, not the count.
+ * The exact per-area state is not this classification: it is the registry's
+ * ledger, read through {@see AreaStatesInterface} where there is one.
  */
 enum ModuleReach
 {

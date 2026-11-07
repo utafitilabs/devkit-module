@@ -99,6 +99,10 @@ final class UhifadhiDevkitBundle extends AbstractBundle
         $bundles = $builder->hasParameter('kernel.bundles') ? $builder->getParameter('kernel.bundles') : [];
         if (isset($bundles['TwigBundle'])) {
             $container->import('../config/console.php');
+
+            if (isset($bundles['RegistryBundle'], $bundles['DoctrineBundle'])) {
+                $container->import('../config/console_areas.php');
+            }
         }
 
         // The zone import — ONLY where the core's areas are installed, gated the

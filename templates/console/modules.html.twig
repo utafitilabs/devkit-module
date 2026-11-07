@@ -7,28 +7,56 @@
 {% block shell_page_title %}Modules{% endblock %}
 {% block shell_page_subtitle %}
     The installed fleet, in one register &mdash; every module with its version,
-    whether it pins the current core, how many grants and routes it declares,
+    whether it pins the current core, how many permissions and routes it declares,
     and where it is switched on. This is the authoritative registry the
     compatibility matrix and doctor read from; the Doctor surface turns these same
     facts into pass / warn / fail.
 {% endblock %}
 
 {% block devkit_content %}
-    <div class="factband">
-        <div class="f"><span class="k">Installed</span><span class="v">{{ registry.installedCount }} <em>packages</em></span></div>
-        <div class="f"><span class="k">Current core</span><span class="v">uhifadhi {{ registry.currentCore }}</span></div>
-        <div class="f"><span class="k">On current core</span><span class="v">{{ registry.onCoreCount }} / {{ registry.pinsCoreCount }}</span></div>
-        <div class="f"><span class="k">Grants</span><span class="v">{{ registry.totalGrants }}</span></div>
-        <div class="f"><span class="k">Routes</span><span class="v">{{ registry.totalRoutes }}</span></div>
-        <div class="sp"></div>
-        <div class="f"><span class="k">Conformance</span><span class="v"><a href="{{ path('devkit_console_doctor') }}" style="text-decoration:none"><span class="chip warn">{{ report.warnCount }} warn</span> <span class="chip fail">{{ report.failCount }} fail</span></a></span></div>
-    </div>
+    {% set query = filter|merge(matrixFilter) %}
+    {% set coreBase = query|filter((v, k) => k != 'core' and k != 'page') %}
+    {% set coreOptions = [{label: 'all', count: registry.rows|length, query: coreBase, on: filter.core is not defined}] %}
+    {% for key, label in {on: 'on core', behind: 'behind core', na: 'n/a'} %}
+        {% set coreOptions = coreOptions|merge([{label: label, count: coreCounts[key] ?? 0, query: coreBase|merge({core: key}), on: (filter.core ?? null) == key}]) %}
+    {% endfor %}
 
     <h2 class="zone">The registry</h2>
     <div class="c" style="padding:16px 16px 6px">
-        {{ parts.registry_table(registry.rows) }}
+        {{ parts.bar(query, parts.chip('on core', 'Filter by core', coreOptions), 'q', 'page', 'Find a module') }}
+        {{ parts.registry_table(table.rows, matrix) }}
+        {{ parts.foot(table, query, 'size', 'page', 'package', 'packages') }}
     </div>
 
     <h2 class="zone">Per-area module state</h2>
-    <div class="dk-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg><div class="bd"><b>The per-area on/off matrix is deferred &mdash; flagged, not faked.</b> Host-wide modules are on everywhere by definition; a capability module is switched on per area. The exact grid (&ldquo;on in 1 / 4&rdquo;) needs the registry&rsquo;s per-area ledger &mdash; a database read &mdash; <b>and</b> the host&rsquo;s list of areas to divide by, neither of which the standalone console has. The registry above classifies each module&rsquo;s reach DB-free; the count is a host-bound later slice.</div></div>
+    {% if matrix %}
+        {% set every = matrix.rows|length - matrix.perAreaCount %}
+        <p class="pgsub">{{ every }} {{ every == 1 ? 'module is' : 'modules are' }} on in every area. {{ matrix.perAreaCount }} {{ matrix.perAreaCount == 1 ? 'is' : 'are' }} switched on per area.</p>
+        {% set reachBase = query|filter((v, k) => k != 'reach' and k != 'mpage') %}
+        <div class="c" style="padding:16px 16px 6px">
+            {{ parts.bar(query, parts.chip('reach', 'Filter by reach', [
+                {label: 'all', count: matrix.rows|length, query: reachBase, on: matrixFilter.reach is not defined},
+                {label: 'per area', count: matrix.perAreaCount, query: reachBase|merge({reach: 'per'}), on: (matrixFilter.reach ?? null) == 'per'},
+                {label: 'every area', count: every, query: reachBase|merge({reach: 'every'}), on: (matrixFilter.reach ?? null) == 'every'},
+            ]), 'mq', 'mpage', 'Find a module') }}
+            <table class="tbl dk-areas">
+                <thead><tr><th>module</th>{% for name in matrix.areas %}<th class="dk-c">{{ name }}</th>{% endfor %}</tr></thead>
+                <tbody>
+                {% for row in matrixTable.rows %}
+                    <tr>
+                        <td><b>{{ row.label }}</b><div class="dk-pkg">{{ row.version }} &middot; {{ row.perArea ? 'per area · on in ' ~ row.onCount ~ ' of ' ~ matrix.areas|length ~ (matrix.areas|length == 1 ? ' area' : ' areas') : 'every area' }}</div></td>
+                        {% for uuid, name in matrix.areas %}
+                            <td class="dk-c">{% if row.on[uuid] %}<span class="dk-cell pass">&#10003;</span>{% else %}<span class="dk-cell na">&ndash;</span>{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                {% else %}
+                    <tr><td colspan="{{ matrix.areas|length + 1 }}"><span class="mono d">{{ matrix.rows is empty ? 'No module is installed.' : 'No module matches these filters.' }}</span></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {{ parts.foot(matrixTable, query, 'msize', 'mpage', 'module', 'modules') }}
+        </div>
+    {% else %}
+        <p class="pgsub">This installation has no per-area ledger to read &mdash; the registry and a database keep one &mdash; so where each module is switched on is not drawn here.</p>
+    {% endif %}
 {% endblock %}

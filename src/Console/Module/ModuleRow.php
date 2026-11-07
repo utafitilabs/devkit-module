@@ -33,6 +33,7 @@ final readonly class ModuleRow
         public int $grants,
         public int $routes,
         public ModuleReach $reach,
+        public ?string $slug = null,
     ) {
     }
 }

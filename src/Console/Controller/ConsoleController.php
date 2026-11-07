@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Devkit\Console\Controller;
 
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Twig\Environment;
 use Uhifadhi\Devkit\Console\Command\CommandInventory;
 use Uhifadhi\Devkit\Console\Doctor\Conformance;
 use Uhifadhi\Devkit\Console\Module\ModuleRegistry;
+use Uhifadhi\Devkit\Console\Table\TablePager;
 use Uhifadhi\Devkit\Console\Wiring\ContributionPointInspector;
 
 /**
@@ -47,6 +49,7 @@ final class ConsoleController
         private readonly ModuleRegistry $modules,
         private readonly Conformance $conformance,
         private readonly ContributionPointInspector $points,
+        private readonly TablePager $pager,
         private readonly bool $debug,
     ) {
     }
@@ -72,13 +75,26 @@ final class ConsoleController
         ]);
     }
 
-    public function modules(): Response
+    /**
+     * Two tables, each with its own bar and foot: the registry reads `core`,
+     * `q`, `size`, `page`; the per-area matrix the same keys under an `m`.
+     */
+    public function modules(Request $request): Response
     {
         $this->assertAvailable();
+        $registry = $this->modules->view();
+        $matrix = $this->modules->areaMatrix();
+        $filter = self::filter($request, ['core', 'q', 'size']);
+        $matrixFilter = self::filter($request, ['reach', 'mq', 'msize']);
 
         return $this->render('@UhifadhiDevkit/console/modules.html.twig', [
-            'registry' => $this->modules->view(),
-            'report' => $this->conformance->report(),
+            'registry' => $registry,
+            'table' => $this->pager->page($this->modules->listed($registry, $filter['core'] ?? null, $filter['q'] ?? null), $filter['size'] ?? null, self::value($request, 'page')),
+            'filter' => $filter,
+            'coreCounts' => $this->modules->coreCounts($registry),
+            'matrix' => $matrix,
+            'matrixTable' => null === $matrix ? null : $this->pager->page($matrix->listed($matrixFilter['reach'] ?? null, $matrixFilter['mq'] ?? null), $matrixFilter['msize'] ?? null, self::value($request, 'mpage')),
+            'matrixFilter' => $matrixFilter,
         ]);
     }
 
@@ -98,6 +114,31 @@ final class ConsoleController
         return $this->render('@UhifadhiDevkit/console/wiring.html.twig', [
             'inspector' => $this->points,
         ]);
+    }
+
+    /**
+     * @param list<string> $keys
+     *
+     * @return array<string, string> the keys the request carries, as typed
+     */
+    private static function filter(Request $request, array $keys): array
+    {
+        $filter = [];
+        foreach ($keys as $key) {
+            $value = self::value($request, $key);
+            if (null !== $value) {
+                $filter[$key] = $value;
+            }
+        }
+
+        return $filter;
+    }
+
+    private static function value(Request $request, string $key): ?string
+    {
+        $value = $request->query->get($key);
+
+        return \is_string($value) && '' !== trim($value) ? trim($value) : null;
     }
 
     /**

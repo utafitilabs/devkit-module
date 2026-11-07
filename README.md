@@ -157,7 +157,11 @@ and has four surfaces, reached under `/_devkit`:
   descriptor commands are built from, seen from the side).
 - **Modules** — the installed fleet as one register: each package's version, the
   core it pins (`Composer\Semver` against the installed `uhifadhi/uhifadhi`), its
-  declared permissions and stamped routes, and its DB-free reach classification.
+  declared permissions and stamped routes, and where it is switched on; then the
+  per-area state, one row per module and one column per area, read off the
+  registry's ledger. Both tables sit under the house filter bar and over the
+  house foot, narrowed and paged by query (`?core=&q=&size=&page=` for the
+  registry, `?reach=&mq=&msize=&mpage=` for the per-area state).
 - **Doctor** — the compatibility matrix and the findings that turn it into
   pass / warn / fail. Devkit computes the checks it can read (pins the core, no
   `dev-main` marker, routes stamped) and **flags the rest as deferred** rather
@@ -180,10 +184,11 @@ when@dev:
         resource: '@UhifadhiDevkitBundle/config/routes/console.php'
 ```
 
-The introspection is DB-free: everything reads Composer, the router and the
-tagged services. The one thing it cannot read standalone — the exact **per-area**
-on/off count — needs the registry's per-area ledger (a database) and the host's list
-of areas, and is flagged deferred on the Modules surface rather than faked.
+The introspection reads Composer, the router and the tagged services. The
+per-area state is the one database read: where RegistryBundle and Doctrine are
+installed the console reads the registry's ledger (every area, and every module
+switched on in each); without them the Modules surface says it has no ledger to
+read and draws no per-area table.
 
 ## Why the contracts live in the core, not here
 

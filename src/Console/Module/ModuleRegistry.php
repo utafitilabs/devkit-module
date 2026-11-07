@@ -33,11 +33,10 @@ use Uhifadhi\Devkit\Console\Package\ResolvedPackage;
  * version actually installed — {@see Semver}, not a string
  * match, so `^0.4` reads as behind `0.5.1` and `^0.5` reads as on it.
  *
- * WHAT IS DEFERRED, AND WHY. The exact per-area on/off count ("on in 1 / 4")
- * needs the registry's per-area ledger — a database read — and the host's list of
- * areas to divide by. The standalone console has neither, so a module's reach is
- * classified DB-free ({@see ModuleReach}) and the count is left to a host-bound
- * later slice rather than faked here.
+ * WHERE A MODULE IS ON. Its reach is classified from the tags alone
+ * ({@see ModuleReach}); the exact per-area state ("on in 1 / 4") is the
+ * registry's ledger, read through {@see AreaStatesInterface} where the
+ * installation keeps one, and absent where it does not.
  */
 final class ModuleRegistry
 {
@@ -52,7 +51,89 @@ final class ModuleRegistry
         private readonly PackageIntrospector $packages,
         private readonly RouterInterface $router,
         private readonly iterable $concerns = [],
+        private readonly ?AreaStatesInterface $areaStates = null,
     ) {
+    }
+
+    /**
+     * The registry rows a reader narrowed to: one core state (`on`, `behind`,
+     * `na`) and a name that contains what they typed.
+     *
+     * @return list<ModuleRow>
+     */
+    public function listed(ModuleRegistryView $view, ?string $core, ?string $query): array
+    {
+        $query = trim((string) $query);
+
+        return array_values(array_filter($view->rows, static fn (ModuleRow $row): bool => (null === $core || $core === self::coreKey($row->coreState))
+            && ('' === $query || false !== mb_stripos($row->package->shortName.' '.$row->package->name, $query))));
+    }
+
+    /**
+     * How many registry rows each core state has.
+     *
+     * @return array<string, int>
+     */
+    public function coreCounts(ModuleRegistryView $view): array
+    {
+        $counts = [];
+        foreach ($view->rows as $row) {
+            $key = self::coreKey($row->coreState);
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        return $counts;
+    }
+
+    /** What the core chip calls a state. */
+    public static function coreKey(CoreState $state): string
+    {
+        return match ($state) {
+            CoreState::OnCore => 'on',
+            CoreState::BehindCore => 'behind',
+            CoreState::NotApplicable => 'na',
+        };
+    }
+
+    /**
+     * THE PER-AREA MODULE STATE, or null where the installation has no
+     * per-area ledger to read. One row per module the module tag collects,
+     * read off the ledger, and one per package that is no module of an area
+     * — on in every area by definition; the core itself is no row.
+     */
+    public function areaMatrix(): ?AreaMatrix
+    {
+        if (null === $this->areaStates) {
+            return null;
+        }
+
+        $areas = $this->areaStates->areas();
+        $switchedOn = $this->areaStates->switchedOn();
+
+        $rows = [];
+        $owned = [];
+        foreach ($this->providers as $provider) {
+            $package = $this->packages->ownerOf($provider);
+            if (null !== $package) {
+                $owned[$package->name] = true;
+            }
+            $on = [];
+            foreach (array_keys($areas) as $uuid) {
+                $on[$uuid] = \in_array($provider->slug(), $switchedOn[$uuid] ?? [], true);
+            }
+            $rows[] = new AreaMatrixRow($provider->slug(), $provider->name(), $package->version ?? '', !$provider->base(), $on);
+        }
+
+        foreach ($this->packages->fleet() as $package) {
+            if (self::CORE_PACKAGE === $package->name || isset($owned[$package->name])) {
+                continue;
+            }
+            $rows[] = new AreaMatrixRow(null, $package->shortName, $package->version, false, array_fill_keys(array_keys($areas), true));
+        }
+
+        usort($rows, static fn (AreaMatrixRow $a, AreaMatrixRow $b): int => [$b->perArea, $a->label] <=> [$a->perArea, $b->label]);
+
+        return new AreaMatrix($areas, $rows);
     }
 
     /**
@@ -104,6 +185,7 @@ final class ModuleRegistry
             grants: null === $provider ? 0 : $this->grantsOf($provider->slug()),
             routes: null === $provider ? 0 : $this->routeCount($provider->slug()),
             reach: $this->reach($isCore, $provider),
+            slug: $provider?->slug(),
         );
     }
 

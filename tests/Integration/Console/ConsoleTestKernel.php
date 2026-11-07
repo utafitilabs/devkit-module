@@ -24,6 +24,7 @@ use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Devkit\Tests\Integration\Console\Fixtures\FixtureAreaStates;
 use Uhifadhi\Devkit\Tests\Integration\Console\Fixtures\FixtureModuleProvider;
 use Uhifadhi\Devkit\Tests\Integration\Fixtures\RecordingCommandProvider;
 use Uhifadhi\Devkit\Tests\Integration\Fixtures\RecordingContentProvider;
@@ -33,7 +34,7 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
  * THE INSTALLATION THE DEV CONSOLE LIVES IN — the shell frame the console renders
  * in (framework + twig + ux-icons + stimulus + shell), devkit itself, and NO
  * database: like the shell, the console is booted without one, and the per-area
- * data that would need one is the flagged deferral, not a boot requirement.
+ * state is a fixture ledger in the `areas` environment and absent otherwise.
  *
  * The kernel plays the ALWAYS-INSTALLED MODULES: it tags a few fixture providers
  * — seed-content, a command, and two module providers on the `uhifadhi.module`
@@ -45,6 +46,8 @@ use Uhifadhi\Devkit\UhifadhiDevkitBundle;
 final class ConsoleTestKernel extends Kernel
 {
     use MicroKernelTrait;
+
+    public const string WITH_AREAS = 'areas';
 
     public function registerBundles(): iterable
     {
@@ -112,6 +115,12 @@ final class ConsoleTestKernel extends Kernel
         $services->set('devkit.test.module.patrol', FixtureModuleProvider::class)
             ->args(['patrol', 'Patrols', false, 2])
             ->tag(RegistryBundle::MODULE_TAG);
+
+        // The `areas` environment is an installation whose registry has a
+        // per-area ledger; the plain one has none, and the console says so.
+        if (self::WITH_AREAS === $this->environment) {
+            $services->set('devkit.console.area_states', FixtureAreaStates::class);
+        }
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void
